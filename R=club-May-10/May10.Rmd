@@ -1,0 +1,74 @@
+---
+title: "R Club May 10"
+author: "Julin N Maloof"
+date: "5/7/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(nycflights13)
+library(tidyverse)
+flights
+```
+
+```{r}
+filter(flights,month==1, day==1)
+jan1 <- filter(flights,month==1, day==1)
+```
+
+## 5.2.4 Exercises
+
+```{r}
+filter(flights,arr_delay > 120)
+```
+
+```{r}
+filter(flights,dest == "IAH" | dest == "HOU")
+```
+
+```{r}
+filter(flights,carrier %in% c("UA","AA","DL"))
+```
+
+```{r}
+filter(flights,month > 6 & month < 10)
+```
+
+```{r}
+filter(flights,arr_delay > 120 & dep_delay <=0)
+```
+
+```{r}
+filter(flights, dep_delay >= 60 & ((dep_delay - arr_delay) >=29))
+```
+
+```{r}
+filter(flights, dep_time <= 0600 | dep_time == 2400)
+```
+
+```{r}
+?between
+filter(flights, between(dep_delay, 0, 120))
+filter(flights, between(month,7,9))
+```
+
+```{r}
+filter(flights, is.na(dep_time))
+```
+probably these flights got cancelled
+
+```{r}
+NA ^ 0
+NA | TRUE
+FALSE & NA
+NA * 0
+```
+
+If the xpression can be evaluated even with the missing value then it is not NA.  Anything raised to 0 is 1.
+
