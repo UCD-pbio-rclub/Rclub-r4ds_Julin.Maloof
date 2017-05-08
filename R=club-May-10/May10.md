@@ -83,6 +83,8 @@ jan1 <- filter(flights,month==1, day==1)
 
 ## 5.2.4 Exercises
 
+### 1
+
 
 ```r
 filter(flights,arr_delay > 120)
@@ -258,6 +260,8 @@ filter(flights, dep_time <= 0600 | dep_time == 2400)
 ## #   minute <dbl>, time_hour <dttm>
 ```
 
+### 2 
+
 
 ```r
 ?between
@@ -308,6 +312,7 @@ filter(flights, between(month,7,9))
 ## #   minute <dbl>, time_hour <dttm>
 ```
 
+### 3
 
 ```r
 filter(flights, is.na(dep_time))
@@ -333,6 +338,8 @@ filter(flights, is.na(dep_time))
 ## #   minute <dbl>, time_hour <dttm>
 ```
 probably these flights got cancelled
+
+### 4
 
 
 ```r
@@ -911,6 +918,19 @@ _6. What trigonometric functions does R provide?_
 
 
 ```r
-?Trig
+help("Trig")
 ```
+
+cos(x)  
+sin(x)  
+tan(x)  
+
+acos(x)  
+asin(x)  
+atan(x)  
+atan2(y, x)
+
+cospi(x)  
+sinpi(x)  
+tanpi(x)
 

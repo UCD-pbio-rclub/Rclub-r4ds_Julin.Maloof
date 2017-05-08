@@ -173,6 +173,8 @@ library(tidyverse)</code></pre>
 <pre class="r"><code>jan1 &lt;- filter(flights,month==1, day==1)</code></pre>
 <div id="exercises" class="section level2">
 <h2>5.2.4 Exercises</h2>
+<div id="section" class="section level3">
+<h3>1</h3>
 <pre class="r"><code>filter(flights,arr_delay &gt; 120)</code></pre>
 <pre><code>## # A tibble: 10,034 × 19
 ##     year month   day dep_time sched_dep_time dep_delay arr_time
@@ -299,6 +301,9 @@ library(tidyverse)</code></pre>
 ## #   arr_delay &lt;dbl&gt;, carrier &lt;chr&gt;, flight &lt;int&gt;, tailnum &lt;chr&gt;,
 ## #   origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;dbl&gt;, distance &lt;dbl&gt;, hour &lt;dbl&gt;,
 ## #   minute &lt;dbl&gt;, time_hour &lt;dttm&gt;</code></pre>
+</div>
+<div id="section-1" class="section level3">
+<h3>2</h3>
 <pre class="r"><code>?between
 filter(flights, between(dep_delay, 0, 120))</code></pre>
 <pre><code>## # A tibble: 135,223 × 19
@@ -336,6 +341,9 @@ filter(flights, between(dep_delay, 0, 120))</code></pre>
 ## #   arr_delay &lt;dbl&gt;, carrier &lt;chr&gt;, flight &lt;int&gt;, tailnum &lt;chr&gt;,
 ## #   origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;dbl&gt;, distance &lt;dbl&gt;, hour &lt;dbl&gt;,
 ## #   minute &lt;dbl&gt;, time_hour &lt;dttm&gt;</code></pre>
+</div>
+<div id="section-2" class="section level3">
+<h3>3</h3>
 <pre class="r"><code>filter(flights, is.na(dep_time))</code></pre>
 <pre><code>## # A tibble: 8,255 × 19
 ##     year month   day dep_time sched_dep_time dep_delay arr_time
@@ -355,6 +363,9 @@ filter(flights, between(dep_delay, 0, 120))</code></pre>
 ## #   origin &lt;chr&gt;, dest &lt;chr&gt;, air_time &lt;dbl&gt;, distance &lt;dbl&gt;, hour &lt;dbl&gt;,
 ## #   minute &lt;dbl&gt;, time_hour &lt;dttm&gt;</code></pre>
 <p>probably these flights got cancelled</p>
+</div>
+<div id="section-3" class="section level3">
+<h3>4</h3>
 <pre class="r"><code>NA ^ 0</code></pre>
 <pre><code>## [1] 1</code></pre>
 <pre class="r"><code>NA | TRUE</code></pre>
@@ -364,6 +375,7 @@ filter(flights, between(dep_delay, 0, 120))</code></pre>
 <pre class="r"><code>NA * 0</code></pre>
 <pre><code>## [1] NA</code></pre>
 <p>If the xpression can be evaluated even with the missing value then it is not NA. Anything raised to 0 is 1.</p>
+</div>
 </div>
 <div id="exercises-1" class="section level2">
 <h2>5.3.1 Exercises</h2>
@@ -613,7 +625,7 @@ arrange(df,x)</code></pre>
 <pre class="r"><code>select(flights, contains(&quot;TIME&quot;, ignore.case = FALSE))</code></pre>
 <pre><code>## # A tibble: 336,776 × 0</code></pre>
 </div>
-<div id="section" class="section level2">
+<div id="section-4" class="section level2">
 <h2>5.5.2</h2>
 <p><em>1. Currently dep_time and sched_dep_time are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.</em></p>
 <pre class="r"><code>transmute(flights,
@@ -713,7 +725,17 @@ flights3</code></pre>
 <pre class="r"><code>1:3 + 1:10</code></pre>
 <p>This returns an error because one vector is shorter than the other and it is unclear what to do.</p>
 <p><em>6. What trigonometric functions does R provide?</em></p>
-<pre class="r"><code>?Trig</code></pre>
+<pre class="r"><code>help(&quot;Trig&quot;)</code></pre>
+<p>cos(x)<br />
+sin(x)<br />
+tan(x)</p>
+<p>acos(x)<br />
+asin(x)<br />
+atan(x)<br />
+atan2(y, x)</p>
+<p>cospi(x)<br />
+sinpi(x)<br />
+tanpi(x)</p>
 </div>
 
 
