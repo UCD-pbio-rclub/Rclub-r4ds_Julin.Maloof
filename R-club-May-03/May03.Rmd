@@ -133,3 +133,108 @@ ggplot(data = diamonds) +
 ```
 
 every category is its own group and proportions are calcualted relative to that.
+
+## 3.8.1 Exercises
+
+1.
+
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point()
+```
+
+Points are overlapped.
+
+Fix with
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point(position = "jitter")
+```
+
+2. Jitter is controlled with the `width` and `height` arguments?geom
+
+3,
+
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_count()
+```
+
+Count deals with overlapped data by binning them and adjusting point size.
+
+4.
+
+The default adjustment for box-plot is dodge:
+
+```{r}
+ggplot(mpg,aes(x=class,y=hwy,fill=drv)) + geom_boxplot()
+```
+
+## 3.9.1 Exercises
+
+```{r}
+bar <- ggplot(data = diamonds) + 
+  geom_bar(
+    mapping = aes(x = cut, fill = cut), 
+    show.legend = FALSE,
+    width = 1
+  ) + 
+  theme(aspect.ratio = 1) +
+  labs(x = NULL, y = NULL)
+
+bar + coord_flip()
+bar + coord_polar()
+```
+
+1. Turn a stacked bar chart into a polar chart
+
+```{r}
+pl <- ggplot(mpg,aes(x=as.factor(cyl), y = hwy, fill = drv))
+pl + geom_col()
+pl + geom_col() + coord_polar() + labs(x=NULL,y=NULL)
+```
+ 
+Not very sensical because mileage is getting summed...but the coverted graph looks cool
+
+2. `labs()` sets the x and y axis labels (and also title and subtitle)
+
+3. `coord_quickmap()` and `coord_map()` have the same goal, but `quickmap` is a fast approximation and works best for small areas near the equator
+
+4. 
+
+```{r}
+pl <- ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_point() + 
+  geom_abline()
+pl +  ggtitle("standard")
+pl + coord_fixed() + ggtitle("coord_fixed")
+pl + coord_fixed() + ggtitle("coord_fixed") + geom_smooth(method = "lm", se=FALSE)
+```
+
+There is a ~ linear relationship but it is offset from the diagonal and perhaps has a slope a bit higher than one.  
+
+coord_fix insures that there is a 1:1 relationshp between the scales on the x and y axis.
+
+geom_abline() adds a lins from point a to point b.  By default it is the diagonal.
+
+## 4.4 Exercises
+
+1.  There is a typo, "1" instead of "i" in "var1able"
+
+2. 
+
+```{r}
+library(tidyverse)
+
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+
+filter(mpg, cyl == 8)
+filter(diamonds, carat > 3)
+```
+
+
+3. keyboard shortcuts.  also found under help menu.
