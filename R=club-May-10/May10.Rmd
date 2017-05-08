@@ -72,3 +72,154 @@ NA * 0
 
 If the xpression can be evaluated even with the missing value then it is not NA.  Anything raised to 0 is 1.
 
+## 5.3.1 Exercises
+
+_1. How could you use arrange() to sort all missing values to the start? (Hint: use is.na())._
+
+```{r}
+df <- tibble(x = c(5, 2, NA))
+arrange(df,x)
+arrange(df,is.na(x))
+arrange(df,is.na(x),x) #NA first and then numeric order
+```
+
+
+_2. Sort flights to find the most delayed flights. Find the flights that left earliest._
+
+```{r}
+arrange(flights,desc(arr_delay))
+arrange(flights,dep_time)
+```
+
+
+_3. Sort flights to find the fastest flights._
+
+```{r}
+arrange(flights,air_time)
+```
+
+
+_4. Which flights travelled the longest? Which travelled the shortest?_
+
+```{r}
+arrange(flights,desc(distance))
+arrange(flights,distance)
+```
+
+```{r}
+select(flights, year, month, day)
+```
+
+## 5.4.1 Exercises
+
+1. Brainstorm as many ways as possible to select dep_time, dep_delay, arr_time, and arr_delay from flights.
+
+```{r}
+select(flights, dep_time, dep_delay, arr_time, arr_delay)
+select(flights, starts_with("dep"), starts_with("arr"))
+select(flights, matches("^(dep|arr)"))
+# we could also exclude everything else, but that would be a pain
+```
+
+
+2. What happens if you include the name of a variable multiple times in a select() call?
+
+```{r}
+select(flights, dep_time, dep_time)
+```
+only shows once
+
+3. What does the one_of() function do? Why might it be helpful in conjunction with this vector?
+
+```{r}
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")
+?one_of
+```
+
+```{r}
+select(flights, one_of(vars))
+#select(flights, vars)
+```
+
+`one_of()` seems strangely named, but apparently it allows us to feed in a character vector of column names.
+
+
+4. Does the result of running the following code surprise you? How do the select helpers deal with case by default? How can you change that default?
+
+```{r}
+select(flights, contains("TIME"))
+```
+I am suprised.  
+
+```{r}
+select(flights, contains("TIME", ignore.case = FALSE))
+```
+
+## 5.5.2
+
+*1. Currently dep_time and sched_dep_time are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.*
+
+```{r}
+transmute(flights,
+          dep_time, dep_time2 = dep_time %/% 100 * 60 + dep_time %% 100, 
+          sched_dep_time, sched_dep_time2 = sched_dep_time %/% 100 * 60 + sched_dep_time %% 100)
+```
+
+
+*2. Compare air_time with arr_time - dep_time. What do you expect to see? What do you see? What do you need to do to fix it?*
+
+```{r}
+ggplot(flights, aes(x=air_time, y = (arr_time-dep_time))) + geom_point(alpha=.1)
+```
+
+The problem is that if the plane arrives the next day then those hours are not taken into account.  We need to add the extra day to arrival time when necessary.  In addition, we have to deal with the 60 minute problem.  Time zones are also a problem.
+
+```{r}
+flights2 <- transmute(flights, arr_time, dep_time, air_time, 
+                      arr_time2 = arr_time %/% 100 * 60 + arr_time %% 100,
+                      dep_time2 = dep_time %/% 100 * 60 + dep_time %% 100,
+          arr_dep_diff = ifelse(arr_time2 < dep_time2, arr_time2-dep_time2 + 1440, arr_time2-dep_time2))
+flights2
+```
+
+```{r}
+ggplot(flights2, aes(x=air_time, y = arr_dep_diff)) + geom_point(alpha=0.1)
+```
+
+*3. Compare dep_time, sched_dep_time, and dep_delay. How would you expect those three numbers to be related?*
+
+I expect dep_delay = dep_time - sched_dep_time
+```{r}
+flights3 <- transmute(flights,
+          dep_time, dep_time2 = dep_time %/% 100 * 60 + dep_time %% 100, 
+          sched_dep_time, sched_dep_time2 = sched_dep_time %/% 100 * 60 + sched_dep_time %% 100, dep_delay, 
+          dep_diff = ifelse(dep_time2+120 < sched_dep_time2, 
+                            dep_time2-sched_dep_time2 + 1440,
+                            dep_time2-sched_dep_time2
+                            ))
+flights3
+ggplot(flights3, aes(x=dep_delay, y = dep_time2 - sched_dep_time2)) + geom_point(alpha=0.1)
+ggplot(flights3, aes(x=dep_delay, y = dep_diff)) + geom_point(alpha=0.1)
+```
+
+
+*4. Find the 10 most delayed flights using a ranking function. How do you want to handle ties? Carefully read the documentation for min_rank().*
+
+```{r}
+flights %>% mutate(rank = min_rank(arr_delay)) %>% arrange(desc(rank)) %>% head(10)
+```
+
+
+_5. What does 1:3 + 1:10 return? Why?_
+
+```{r, eval=FALSE}
+1:3 + 1:10
+```
+This returns an error because one vector is shorter than the other and it is unclear what to do.
+
+_6. What trigonometric functions does R provide?_
+
+```{r}
+?Trig
+```
+
