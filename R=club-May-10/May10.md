@@ -396,29 +396,29 @@ arrange(df,x)
 ```
 
 ```r
-arrange(df,is.na(x))
+arrange(df,desc(is.na(x)))
 ```
 
 ```
 ## # A tibble: 3 × 1
 ##       x
 ##   <dbl>
-## 1     5
-## 2     2
-## 3    NA
+## 1    NA
+## 2     5
+## 3     2
 ```
 
 ```r
-arrange(df,is.na(x),x) #NA first and then numeric order
+arrange(df,desc(is.na(x)),x) #NA first and then numeric order
 ```
 
 ```
 ## # A tibble: 3 × 1
 ##       x
 ##   <dbl>
-## 1     2
-## 2     5
-## 3    NA
+## 1    NA
+## 2     2
+## 3     5
 ```
 
 
@@ -912,7 +912,7 @@ _5. What does 1:3 + 1:10 return? Why?_
 ```r
 1:3 + 1:10
 ```
-This returns an error because one vector is shorter than the other and it is unclear what to do.
+This returns a warning because one vector is shorter than the other and it is unclear what to do.
 
 _6. What trigonometric functions does R provide?_
 

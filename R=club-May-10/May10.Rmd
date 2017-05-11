@@ -86,8 +86,8 @@ _1. How could you use arrange() to sort all missing values to the start? (Hint: 
 ```{r}
 df <- tibble(x = c(5, 2, NA))
 arrange(df,x)
-arrange(df,is.na(x))
-arrange(df,is.na(x),x) #NA first and then numeric order
+arrange(df,desc(is.na(x)))
+arrange(df,desc(is.na(x)),x) #NA first and then numeric order
 ```
 
 
@@ -222,7 +222,7 @@ _5. What does 1:3 + 1:10 return? Why?_
 ```{r, eval=FALSE}
 1:3 + 1:10
 ```
-This returns an error because one vector is shorter than the other and it is unclear what to do.
+This returns a warning because one vector is shorter than the other and it is unclear what to do.
 
 _6. What trigonometric functions does R provide?_
 
