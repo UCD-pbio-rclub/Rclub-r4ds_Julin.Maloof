@@ -496,23 +496,29 @@ _Which plane (tailnum) has the worst on-time record?_
 ```r
 not_cancelled %>% group_by(tailnum) %>%
   mutate(avg_arr_delay = mean(arr_delay)) %>% 
-  ungroup() %>%
-  filter(rank(desc(avg_arr_delay)) < 5) %>%
   arrange(desc(avg_arr_delay))
 ```
 
 ```
-## # A tibble: 4 × 20
-##    year month   day dep_time sched_dep_time dep_delay arr_time
-##   <int> <int> <int>    <int>          <int>     <dbl>    <int>
-## 1  2013     7    22     2117           1620       297       22
-## 2  2013     1    28     1857           1429       268     2136
-## 3  2013     9    16     1744           1310       274     1944
-## 4  2013     7     1     1632           1200       272     1859
-## # ... with 13 more variables: sched_arr_time <int>, arr_delay <dbl>,
-## #   carrier <chr>, flight <int>, tailnum <chr>, origin <chr>, dest <chr>,
-## #   air_time <dbl>, distance <dbl>, hour <dbl>, minute <dbl>,
-## #   time_hour <dttm>, avg_arr_delay <dbl>
+## Source: local data frame [327,346 x 20]
+## Groups: tailnum [4,037]
+## 
+##     year month   day dep_time sched_dep_time dep_delay arr_time
+##    <int> <int> <int>    <int>          <int>     <dbl>    <int>
+## 1   2013     7    22     2117           1620       297       22
+## 2   2013     1    28     1857           1429       268     2136
+## 3   2013     9    16     1744           1310       274     1944
+## 4   2013     7     1     1632           1200       272     1859
+## 5   2013     7    11     1323            930       233     1613
+## 6   2013    12     5     1453           1130       203     1703
+## 7   2013    12    17     2111           1805       186     2238
+## 8   2013     5    28     2216           1829       227       19
+## 9   2013    12    20     1718           1640        38     1914
+## 10  2013     3    31     1502           1510        -8     1722
+## # ... with 327,336 more rows, and 13 more variables: sched_arr_time <int>,
+## #   arr_delay <dbl>, carrier <chr>, flight <int>, tailnum <chr>,
+## #   origin <chr>, dest <chr>, air_time <dbl>, distance <dbl>, hour <dbl>,
+## #   minute <dbl>, time_hour <dttm>, avg_arr_delay <dbl>
 ```
 
 If we want to limit to tailnum with > 25 flights
@@ -520,30 +526,52 @@ If we want to limit to tailnum with > 25 flights
 ```r
 not_cancelled %>% group_by(tailnum) %>%
   mutate(avg_arr_delay = mean(arr_delay), n=n()) %>% 
-  filter(n > 24) %>%
-  ungroup() %>%
-  filter(rank(desc(avg_arr_delay)) < 50) %>%
-  arrange(desc(avg_arr_delay))
+  filter(n > 24, !duplicated(tailnum)) %>%
+  arrange(desc(avg_arr_delay)) %>%
+  select(tailnum,avg_arr_delay,n)
 ```
 
 ```
-## # A tibble: 41 × 21
-##     year month   day dep_time sched_dep_time dep_delay arr_time
-##    <int> <int> <int>    <int>          <int>     <dbl>    <int>
-## 1   2013     1     1      833            835        -2     1134
-## 2   2013     1     3      835            835         0     1102
-## 3   2013     1    22      828            830        -2     1111
-## 4   2013    10     2     1316           1325        -9     1518
-## 5   2013    11    18      826            830        -4     1047
-## 6   2013    11    25      944            830        74     1211
-## 7   2013    12     4      913            855        18     1211
-## 8   2013    12     8     1729           1729         0     2112
-## 9   2013    12     9     2018           1729       169     2306
-## 10  2013     2     1      833            830         3     1058
-## # ... with 31 more rows, and 14 more variables: sched_arr_time <int>,
-## #   arr_delay <dbl>, carrier <chr>, flight <int>, tailnum <chr>,
-## #   origin <chr>, dest <chr>, air_time <dbl>, distance <dbl>, hour <dbl>,
-## #   minute <dbl>, time_hour <dttm>, avg_arr_delay <dbl>, n <int>
+## Source: local data frame [2,967 x 3]
+## Groups: tailnum [2,967]
+## 
+##    tailnum avg_arr_delay     n
+##      <chr>         <dbl> <int>
+## 1   N203FR      59.12195    41
+## 2   N956AT      47.64706    34
+## 3   N988AT      44.34286    35
+## 4   N521VA      42.22222    27
+## 5   N6716C      40.32000    25
+## 6   N657MQ      38.50000    36
+## 7   N942MQ      38.30952    42
+## 8   N522VA      37.80645    31
+## 9   N987AT      37.38462    26
+## 10  N204FR      37.35417    48
+## # ... with 2,957 more rows
 ```
 
-Still not happy with this
+### 3
+_What time of day should you fly if you want to avoid delays as much as possible?_
+
+
+```r
+pl <- ggplot(not_cancelled,aes(x=sched_dep_time,y=dep_delay)) + geom_smooth()
+pl
+```
+
+```
+## `geom_smooth()` using method = 'gam'
+```
+
+![](May17_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+
+
+```r
+not_cancelled %>% mutate(dep_hour = sched_dep_time %/% 100) %>%
+  group_by(dep_hour) %>%
+  summarize(mean_arr_delay = mean(arr_delay)) %>%
+  ggplot(aes(x=dep_hour,y=mean_arr_delay)) + geom_col()
+```
+
+![](May17_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+
