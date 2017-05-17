@@ -64,15 +64,6 @@ not_cancelled <- flights %>%
 ```{r}
 not_cancelled %>% 
   group_by(year, month, day) %>% 
-  summarise(
-    first_dep = first(dep_time), 
-    last_dep = last(dep_time),
-  )
-```
-
-```{r}
-not_cancelled %>% 
-  group_by(year, month, day) %>% 
   mutate(r = min_rank(desc(dep_time))) %>% 
   filter(r %in% range(r))
 ```
@@ -175,11 +166,23 @@ Skipping
 
 _Which plane (tailnum) has the worst on-time record?_
 
-Not working...
 
 ```{r}
 not_cancelled %>% group_by(tailnum) %>%
-  mutate(avg_arr_delay = mean(arr_delay), rank_delay = rank(desc(avg_arr_delay))) %>%
-  filter(rank_delay == 1)
+  mutate(avg_arr_delay = mean(arr_delay)) %>% 
+  ungroup() %>%
+  filter(rank(desc(avg_arr_delay)) < 5) %>%
+  arrange(desc(avg_arr_delay))
 ```
 
+If we want to limit to tailnum with > 25 flights
+```{r}
+not_cancelled %>% group_by(tailnum) %>%
+  mutate(avg_arr_delay = mean(arr_delay), n=n()) %>% 
+  filter(n > 24) %>%
+  ungroup() %>%
+  filter(rank(desc(avg_arr_delay)) < 50) %>%
+  arrange(desc(avg_arr_delay))
+```
+
+Still not happy with this
