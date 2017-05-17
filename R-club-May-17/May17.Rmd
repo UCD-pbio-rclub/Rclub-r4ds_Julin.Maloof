@@ -1,0 +1,188 @@
+---
+title: "Untitled"
+author: "Julin N Maloof"
+date: "5/16/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+library(nycflights13)
+library(tidyverse)
+```
+
+## Scratchpad
+
+```{r}
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+```
+
+```{r}
+by_day <- group_by(flights, year, month, day)
+summarise(by_day, delay = mean(dep_delay, na.rm = TRUE))
+```
+
+```{r}
+by_dest <- group_by(flights, dest)
+delay <- summarise(by_dest,
+  count = n(),
+  dist = mean(distance, na.rm = TRUE),
+  delay = mean(arr_delay, na.rm = TRUE)
+)
+
+by_dest
+
+delay <- filter(delay, count > 20, dest != "HNL")
+
+delay
+```
+
+```{r}
+delays <- flights %>% 
+  group_by(dest) %>% 
+  summarise(
+    count = n(),
+    dist = mean(distance, na.rm = TRUE),
+    delay = mean(arr_delay, na.rm = TRUE)
+  ) %>% 
+  filter(count > 20, dest != "HNL")
+
+```
+
+```{r}
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+```
+
+```{r}
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  mutate(r = min_rank(desc(dep_time))) %>% 
+  filter(r %in% range(r))
+```
+
+```{r}
+not_cancelled %>% 
+  count(dest)
+```
+
+```{r}
+not_cancelled %>%
+  group_by(flight) %>%
+  mutate(
+    late_15 = mean(arr_delay == 15),
+    early_15 = mean(arr_delay == -15)
+    ) %>%
+  filter(late_15 == .5, !duplicated(flight)) %>%
+  select(carrier, flight, origin, dest) # because the other columns are specific to particular days
+```
+
+```{r}
+not_cancelled %>%
+  group_by(flight) %>%
+  summarize(
+    late_15 = mean(arr_delay == 15),
+    early_15 = mean(arr_delay == -15)
+    ) %>%
+  filter(late_15 == .5)
+```
+
+
+## 5.6.7 Exercises
+
+### 1
+
+Skipping it
+
+### 2
+
+_Come up with another approach that will give you the same output as below without using `count()`_
+```{r}
+not_cancelled %>% 
+  count(dest)
+not_cancelled %>% 
+  count(tailnum, wt = distance)
+```
+
+```{r}
+not_cancelled %>% group_by(dest) %>% summarize(n=n())
+not_cancelled %>% group_by(tailnum) %>% tally(wt=distance)
+
+```
+
+### 3
+
+_Our definition of cancelled flights (is.na(dep_delay) | is.na(arr_delay) ) is slightly suboptimal. Why? Which is the most important column?_
+
+arr_delay is the more important column.  Maybe the departure delay wasn't recorded?
+
+### 4
+
+_Look at the number of cancelled flights per day. Is there a pattern? Is the proportion of cancelled flights related to the average delay?_
+
+```{r}
+cancelled_by_day <- flights %>% group_by(year,month,day) %>%
+  summarize(cancelled=sum(is.na(dep_delay) | is.na(arr_delay)),
+            avg_arr_delay=mean(arr_delay,na.rm=TRUE))
+cancelled_by_day
+qplot(x=avg_arr_delay,y=cancelled,data = cancelled_by_day)
+```
+
+### 5 
+
+_Which carrier has the worst delays? Challenge: can you disentangle the effects of bad airports vs. bad carriers? Why/why not? (Hint: think about_ `flights %>% group_by(carrier, dest) %>% summarise(n()))`
+
+```{r}
+not_cancelled %>% group_by(carrier) %>% summarize(mean_delay=mean(arr_delay)) %>% arrange(desc(mean_delay))
+```
+
+### 6
+
+_What does the sort argument to count() do. When might you use it?_
+
+Sorts...(duh).  Use it when you want to sort the counts....
+```{r}
+not_cancelled %>% count(dest)
+
+not_cancelled %>% count(dest,sort = TRUE)
+
+not_cancelled %>% count(dest) %>% arrange(desc(n))
+```
+
+## 5.7.1 Exercises
+
+### 1
+
+Skipping
+
+### 2
+
+_Which plane (tailnum) has the worst on-time record?_
+
+
+```{r}
+not_cancelled %>% group_by(tailnum) %>%
+  mutate(avg_arr_delay = mean(arr_delay)) %>% 
+  ungroup() %>%
+  filter(rank(desc(avg_arr_delay)) < 5) %>%
+  arrange(desc(avg_arr_delay))
+```
+
+If we want to limit to tailnum with > 25 flights
+```{r}
+not_cancelled %>% group_by(tailnum) %>%
+  mutate(avg_arr_delay = mean(arr_delay), n=n()) %>% 
+  filter(n > 24) %>%
+  ungroup() %>%
+  filter(rank(desc(avg_arr_delay)) < 50) %>%
+  arrange(desc(avg_arr_delay))
+```
+
+Still not happy with this
