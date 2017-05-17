@@ -376,7 +376,11 @@ cancelled_by_day
 ```
 
 ```r
-qplot(x=avg_arr_delay,y=cancelled,data = cancelled_by_day)
+qplot(x=avg_arr_delay,y=cancelled,data = cancelled_by_day) + geom_smooth()
+```
+
+```
+## `geom_smooth()` using method = 'loess'
 ```
 
 ![](May17_files/figure-html/unnamed-chunk-12-1.png)<!-- -->

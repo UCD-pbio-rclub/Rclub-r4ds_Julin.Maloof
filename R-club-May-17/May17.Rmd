@@ -132,7 +132,7 @@ cancelled_by_day <- flights %>% group_by(year,month,day) %>%
   summarize(cancelled=sum(is.na(dep_delay) | is.na(arr_delay)),
             avg_arr_delay=mean(arr_delay,na.rm=TRUE))
 cancelled_by_day
-qplot(x=avg_arr_delay,y=cancelled,data = cancelled_by_day)
+qplot(x=avg_arr_delay,y=cancelled,data = cancelled_by_day) + geom_smooth()
 ```
 
 ### 5 
@@ -142,6 +142,12 @@ _Which carrier has the worst delays? Challenge: can you disentangle the effects 
 ```{r}
 not_cancelled %>% group_by(carrier) %>% summarize(mean_delay=mean(arr_delay)) %>% arrange(desc(mean_delay))
 ```
+
+```{r}
+not_cancelled %>% group_by(carrier,dest) %>% summarize(mean_delay=mean(arr_delay)) %>% arrange(desc(mean_delay)) %>%
+  ggplot(aes(x=carrier,y=dest,fill=mean_delay)) + geom_raster() + scale_fill_gradient()
+```
+
 
 ### 6
 
