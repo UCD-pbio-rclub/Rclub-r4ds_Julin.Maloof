@@ -575,3 +575,39 @@ not_cancelled %>% mutate(dep_hour = sched_dep_time %/% 100) %>%
 
 ![](May17_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
+### 4
+
+_For each destination, compute the total minutes of delay. For each, flight, compute the proportion of the total delay for its destination._
+
+
+```r
+not_cancelled %>% group_by(dest) %>%
+  mutate(total_delay = sum(arr_delay)) %>%
+  group_by(flight) %>%
+  mutate(proportion_delay = arr_delay / total_delay) %>%
+  arrange(dest,desc(proportion_delay))
+```
+
+```
+## Source: local data frame [327,346 x 21]
+## Groups: flight [3,835]
+## 
+##     year month   day dep_time sched_dep_time dep_delay arr_time
+##    <int> <int> <int>    <int>          <int>     <dbl>    <int>
+## 1   2013     7    22     2145           2007        98      132
+## 2   2013    12    14     2223           2001       142      133
+## 3   2013    10    15     2146           2001       105      106
+## 4   2013     7    23     2206           2007       119      116
+## 5   2013    12    17     2220           2001       139      120
+## 6   2013     7    10     2025           2007        18      105
+## 7   2013     7    30     2212           2007       125       57
+## 8   2013     7    28     2038           2007        31       56
+## 9   2013    12     8     2049           2001        48       58
+## 10  2013     9     2     2212           2007       125       48
+## # ... with 327,336 more rows, and 14 more variables: sched_arr_time <int>,
+## #   arr_delay <dbl>, carrier <chr>, flight <int>, tailnum <chr>,
+## #   origin <chr>, dest <chr>, air_time <dbl>, distance <dbl>, hour <dbl>,
+## #   minute <dbl>, time_hour <dttm>, total_delay <dbl>,
+## #   proportion_delay <dbl>
+```
+

@@ -197,3 +197,15 @@ not_cancelled %>% mutate(dep_hour = sched_dep_time %/% 100) %>%
   ggplot(aes(x=dep_hour,y=mean_arr_delay)) + geom_col()
 ```
 
+### 4
+
+_For each destination, compute the total minutes of delay. For each, flight, compute the proportion of the total delay for its destination._
+
+```{r}
+not_cancelled %>% group_by(dest) %>%
+  mutate(total_delay = sum(arr_delay)) %>%
+  group_by(flight) %>%
+  mutate(proportion_delay = arr_delay / total_delay) %>%
+  arrange(dest,desc(proportion_delay))
+```
+
