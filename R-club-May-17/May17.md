@@ -416,6 +416,15 @@ not_cancelled %>% group_by(carrier) %>% summarize(mean_delay=mean(arr_delay)) %>
 ## 16      AS -9.9308886
 ```
 
+
+```r
+not_cancelled %>% group_by(carrier,dest) %>% summarize(mean_delay=mean(arr_delay)) %>% arrange(desc(mean_delay)) %>%
+  ggplot(aes(x=carrier,y=dest,fill=mean_delay)) + geom_raster() + scale_fill_gradient()
+```
+
+![](May17_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
+
 ### 6
 
 _What does the sort argument to count() do. When might you use it?_
@@ -567,7 +576,7 @@ pl
 ## `geom_smooth()` using method = 'gam'
 ```
 
-![](May17_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](May17_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 
 ```r
@@ -577,7 +586,7 @@ not_cancelled %>% mutate(dep_hour = sched_dep_time %/% 100) %>%
   ggplot(aes(x=dep_hour,y=mean_arr_delay)) + geom_col()
 ```
 
-![](May17_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](May17_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 ### 4
 
@@ -589,29 +598,25 @@ not_cancelled %>% group_by(dest) %>%
   mutate(total_delay = sum(arr_delay)) %>%
   group_by(flight) %>%
   mutate(proportion_delay = arr_delay / total_delay) %>%
-  arrange(dest,desc(proportion_delay))
+  arrange(dest,desc(proportion_delay)) %>% select(dest,flight,total_delay, proportion_delay)
 ```
 
 ```
-## Source: local data frame [327,346 x 21]
+## Source: local data frame [327,346 x 4]
 ## Groups: flight [3,835]
 ## 
-##     year month   day dep_time sched_dep_time dep_delay arr_time
-##    <int> <int> <int>    <int>          <int>     <dbl>    <int>
-## 1   2013     7    22     2145           2007        98      132
-## 2   2013    12    14     2223           2001       142      133
-## 3   2013    10    15     2146           2001       105      106
-## 4   2013     7    23     2206           2007       119      116
-## 5   2013    12    17     2220           2001       139      120
-## 6   2013     7    10     2025           2007        18      105
-## 7   2013     7    30     2212           2007       125       57
-## 8   2013     7    28     2038           2007        31       56
-## 9   2013    12     8     2049           2001        48       58
-## 10  2013     9     2     2212           2007       125       48
-## # ... with 327,336 more rows, and 14 more variables: sched_arr_time <int>,
-## #   arr_delay <dbl>, carrier <chr>, flight <int>, tailnum <chr>,
-## #   origin <chr>, dest <chr>, air_time <dbl>, distance <dbl>, hour <dbl>,
-## #   minute <dbl>, time_hour <dttm>, total_delay <dbl>,
-## #   proportion_delay <dbl>
+##     dest flight total_delay proportion_delay
+##    <chr>  <int>       <dbl>            <dbl>
+## 1    ABQ   1505        1113       0.13746631
+## 2    ABQ     65        1113       0.13387242
+## 3    ABQ     65        1113       0.12398922
+## 4    ABQ   1505        1113       0.12309075
+## 5    ABQ     65        1113       0.12219227
+## 6    ABQ   1505        1113       0.11320755
+## 7    ABQ   1505        1113       0.10601977
+## 8    ABQ   1505        1113       0.10512129
+## 9    ABQ     65        1113       0.10242588
+## 10   ABQ   1505        1113       0.09793351
+## # ... with 327,336 more rows
 ```
 

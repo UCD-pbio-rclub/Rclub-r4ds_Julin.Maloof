@@ -212,6 +212,6 @@ not_cancelled %>% group_by(dest) %>%
   mutate(total_delay = sum(arr_delay)) %>%
   group_by(flight) %>%
   mutate(proportion_delay = arr_delay / total_delay) %>%
-  arrange(dest,desc(proportion_delay))
+  arrange(dest,desc(proportion_delay)) %>% select(dest,flight,total_delay, proportion_delay)
 ```
 
