@@ -55,7 +55,7 @@ not_cancelled <- flights %>%
 not_cancelled %>% 
   mutate(month=factor(month)) %>%
   group_by(dest,month) %>% 
-  filter(n() > 365) %>%
+  filter(n() >= 280) %>%
   summarize(avg_delay=mean(arr_delay)) %>%
   ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
 ```
@@ -68,7 +68,7 @@ not_cancelled <- flights %>%
 not_cancelled %>% 
   mutate(month=factor(month)) %>%
   group_by(dest,month) %>% 
-  filter(n() == 365) %>%
+  filter(n() == 280) %>%
   summarize(avg_delay=mean(arr_delay)) %>%
   ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
 ```
