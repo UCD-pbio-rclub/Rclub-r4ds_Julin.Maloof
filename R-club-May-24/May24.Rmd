@@ -2,7 +2,9 @@
 title: "R Club May 24"
 author: "Julin N Maloof"
 date: "5/24/2017"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -30,3 +32,43 @@ ggplot(test.data,aes(x=category)) + geom_bar()
 
 The value is removed from histogram (because where do you put it) but not from geom_bar because we know which category it belongs in.
 
+## 7.5.2.1
+
+### 2
+
+_Use geom_tile() together with dplyr to explore how average flight delays vary by destination and month of year. What makes the plot difficult to read? How could you improve it?_
+
+```{r}
+library(nycflights13)
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+not_cancelled %>% 
+  group_by(dest,month) %>% 
+  summarize(avg_delay=mean(arr_delay)) %>%
+  ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
+```
+
+```{r}
+library(nycflights13)
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+not_cancelled %>% 
+  mutate(month=factor(month)) %>%
+  group_by(dest,month) %>% 
+  filter(n() > 365) %>%
+  summarize(avg_delay=mean(arr_delay)) %>%
+  ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
+```
+
+Test Stacey Q
+```{r}
+library(nycflights13)
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+not_cancelled %>% 
+  mutate(month=factor(month)) %>%
+  group_by(dest,month) %>% 
+  filter(n() == 365) %>%
+  summarize(avg_delay=mean(arr_delay)) %>%
+  ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
+```

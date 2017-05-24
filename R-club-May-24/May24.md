@@ -20,15 +20,15 @@ test.data
 ##        value category
 ##        <dbl>    <chr>
 ## 1         NA        A
-## 2   9.852173        B
-## 3  10.105460        C
-## 4   9.901290        D
-## 5  10.162998        E
-## 6   7.549504        A
-## 7   9.187138        B
-## 8  10.438633        C
-## 9   9.113622        D
-## 10 12.260868        E
+## 2   9.266587        B
+## 3  11.098623        C
+## 4  10.504850        D
+## 5   9.503769        E
+## 6  10.975719        A
+## 7  11.101286        B
+## 8  10.872364        C
+## 9  10.794006        D
+## 10 10.109614        E
 ## # ... with 90 more rows
 ```
 
@@ -56,3 +56,52 @@ ggplot(test.data,aes(x=category)) + geom_bar()
 
 The value is removed from histogram (because where do you put it) but not from geom_bar because we know which category it belongs in.
 
+## 7.5.2.1
+
+### 2
+
+_Use geom_tile() together with dplyr to explore how average flight delays vary by destination and month of year. What makes the plot difficult to read? How could you improve it?_
+
+
+```r
+library(nycflights13)
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+not_cancelled %>% 
+  group_by(dest,month) %>% 
+  summarize(avg_delay=mean(arr_delay)) %>%
+  ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
+```
+
+![](May24_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+
+```r
+library(nycflights13)
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+not_cancelled %>% 
+  mutate(month=factor(month)) %>%
+  group_by(dest,month) %>% 
+  filter(n() > 365) %>%
+  summarize(avg_delay=mean(arr_delay)) %>%
+  ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
+```
+
+![](May24_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
+Test Stacey Q
+
+```r
+library(nycflights13)
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+not_cancelled %>% 
+  mutate(month=factor(month)) %>%
+  group_by(dest,month) %>% 
+  filter(n() == 365) %>%
+  summarize(avg_delay=mean(arr_delay)) %>%
+  ggplot(aes(x=month,y=dest,fill=avg_delay)) + geom_tile()
+```
+
+![](May24_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
