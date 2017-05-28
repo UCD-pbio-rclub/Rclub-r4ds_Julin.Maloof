@@ -1,0 +1,54 @@
+---
+title: "May31"
+author: "Julin N Maloof"
+date: "5/28/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercises 10.5
+
+### 1
+_How can you tell if an object is a tibble? (Hint: try printing mtcars, which is a regular data frame)._
+
+
+### 2
+_Compare and contrast the following operations on a data.frame and equivalent tibble. What is different? Why might the default data frame behaviours cause you frustration?_
+
+```
+df <- data.frame(abc = 1, xyz = "a")
+df$x
+df[, "xyz"]
+df[, c("abc", "xyz")]
+```
+
+### 3
+_If you have the name of a variable stored in an object, e.g. var <- "mpg", how can you extract the reference variable from a tibble?_
+
+### 4
+_Practice referring to non-syntactic names in the following data frame by:_
+
+_1. Extracting the variable called 1._
+
+_2. Plotting a scatterplot of 1 vs 2._
+
+_3. Creating a new column called 3 which is 2 divided by 1._
+
+_4. Renaming the columns to one, two and three._
+
+```
+annoying <- tibble(
+  `1` = 1:10,
+  `2` = `1` * 2 + rnorm(length(`1`))
+)
+```
+
+### 5
+_What does tibble::enframe() do? When might you use it?_
+
+### 6
+_What option controls how many additional column names are printed at the footer of a tibble?_
+
