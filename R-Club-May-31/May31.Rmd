@@ -1,0 +1,131 @@
+---
+title: "May31"
+author: "Julin N Maloof"
+date: "5/28/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercises 10.5
+
+### 1
+_How can you tell if an object is a tibble? (Hint: try printing mtcars, which is a regular data frame)._
+
+```{r}
+library(tidyverse)
+mtcars
+as_tibble(mtcars)
+class(mtcars)
+class(as_tibble(mtcars))
+```
+
+In the Rstudio Rmd interacre you can;t tell just by printing it (other than the row names go away).  At the console it is clear because we are told that a tiblle is a tibble.  Otherwise use `class()`
+
+
+### 2
+_Compare and contrast the following operations on a data.frame and equivalent tibble. What is different? Why might the default data frame behaviours cause you frustration?_
+
+```{r}
+df <- data.frame(abc = 1, xyz = "a")
+df$x
+df[, "xyz"]
+df[, c("abc", "xyz")]
+```
+
+```{r}
+dft <- as_tibble(df)
+dft$x
+dft[, "xyz"]
+dft[, c("abc", "xyz")]
+```
+
+tibles require exact matches for column names.
+
+tible extactions always always return a tibble, whereas dataframes can return a vector.
+
+### 3
+_If you have the name of a variable stored in an object, e.g. var <- "mpg", how can you extract the reference variable from a tibble?_
+
+```{r}
+var <- "hwy"
+data(mpg)
+mpg
+get(var,mpg)
+select(mpg,matches(var))
+subset(mpg,select=var)
+mpg[var]
+mpg[[var]]
+mpg[,var]
+```
+
+
+### 4
+_Practice referring to non-syntactic names in the following data frame by:_
+
+```{r}
+annoying <- tibble(
+  `1` = 1:10,
+  `2` = `1` * 2 + rnorm(length(`1`))
+)
+```
+
+_1. Extracting the variable called 1._
+
+```{r}
+annoying$`1`
+annoying[,"1"]
+annoying %>% select(`1`)
+```
+
+_2. Plotting a scatterplot of 1 vs 2._
+```{r}
+qplot(data=annoying,x=`1`,y=`2`)
+```
+
+
+_3. Creating a new column called 3 which is 2 divided by 1._
+
+```{r}
+annoying2 <- annoying %>% mutate(`3` = `2`/`1`) 
+annoying2
+```
+
+
+_4. Renaming the columns to one, two and three._
+
+```{r}
+lessAnnoying <- annoying2 %>% rename(one=`1`, two=`2`, three=`3`)
+lessAnnoying
+```
+
+
+### 5
+_What does tibble::enframe() do? When might you use it?_
+
+converts a vector to a tibble
+
+```{r}
+myVector <- c(a=1,b=2,c=3)
+myVector
+myVector %>% enframe()
+```
+
+
+### 6
+_What option controls how many additional column names are printed at the footer of a tibble?_
+
+`tibble.max_extra_cols`
+
+
+```{r}
+library(nycflights13)
+flights
+options(tibble.max_extra_cols=3)
+flights
+```
+

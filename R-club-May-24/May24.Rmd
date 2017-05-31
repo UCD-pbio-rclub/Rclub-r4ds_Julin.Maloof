@@ -32,6 +32,22 @@ ggplot(test.data,aes(x=category)) + geom_bar()
 
 The value is removed from histogram (because where do you put it) but not from geom_bar because we know which category it belongs in.
 
+## 7.5.1.1
+
+### 4
+
+```{r, eval=FALSE}
+install.packages("lvplot")
+```
+
+```{r}
+library(lvplot)
+data("diamonds")
+pl <- ggplot(diamonds,aes(x=cut,y=price)) + geom_lv()
+pl
+```
+
+
 ## 7.5.2.1
 
 ### 2
