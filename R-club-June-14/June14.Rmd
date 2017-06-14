@@ -1,0 +1,165 @@
+---
+title: "June 14 Tidy Data 12.1 - 12.4"
+author: "Julin N Maloof"
+date: "6/13/2017"
+output: 
+html_document: 
+keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+## 12.2.1 Exercises
+
+### 1.
+
+### 2. 
+
+## 12.3.1 Exercises
+
+### 1 
+_Why are gather() and spread() not perfectly symmetrical?
+Carefully consider the following example:_
+
+```{r}
+stocks <- tibble(
+  year   = c(2015, 2015, 2016, 2016),
+  half  = c(   1,    2,     1,    2),
+  return = c(1.88, 0.59, 0.92, 0.17)
+)
+stocks
+stocks %>% 
+  spread(year, return)
+stocks %>% 
+  spread(year, return) %>% 
+  gather("year", "return", `2015`:`2016`)
+```
+`year` gets converted to a character (since it was cycled through a column name)
+
+the order chagnes
+
+the `convert` argument converts data types, so:
+
+```{r}
+stocks %>% 
+  spread(year, return) %>% 
+  gather("year", "return", `2015`:`2016`, convert=TRUE)
+```
+
+
+### 2 
+
+```{r, eval=FALSE}
+table4a
+table4a %>% 
+  gather(1999, 2000, key = "year", value = "cases")
+#> Error in combine_vars(vars, ind_list): Position must be between 0 and n
+```
+This fails because the column names `1999` and `2000` need to be backticked.  R is interpreting them as numeric.
+
+```{r}
+table4a %>% 
+  gather(`1999`, `2000`, key = "year", value = "cases")
+#> Error in combine_vars(vars, ind_list): Position must be between 0 and n
+```
+
+### 3
+_Why does spreading this tibble fail? How could you add a new column to fix the problem?_
+
+```{r}
+people <- tribble(
+  ~name,             ~key,    ~value,
+  #-----------------|--------|------
+  "Phillip Woods",   "age",       45,
+  "Phillip Woods",   "height",   186,
+  "Phillip Woods",   "age",       50,
+  "Jessica Cordero", "age",       37,
+  "Jessica Cordero", "height",   156
+)
+people
+```
+
+```{r, eval = FALSE}
+people %>% spread(key = key,value = value)
+```
+
+Fails because "Phillip Woods" is represted twice
+
+```{r}
+people  %>% group_by(name,key) %>% 
+  mutate(observation=row_number()) %>% 
+  spread(key = key,value = value)
+```
+
+Not perfect because we don't know at which age the height was measured...
+
+### 4 
+
+_Tidy the simple tibble below. Do you need to spread or gather it? What are the variables?_
+
+```{r}
+preg <- tribble(
+  ~pregnant, ~male, ~female,
+  "yes",     NA,    10,
+  "no",      20,    12
+)
+preg
+```
+
+Male and female need to be gathered 
+
+```{r}
+preg %>% gather(male, female, key="gender", value=cases)
+```
+
+Potentially gathered and spread..
+
+```{r}
+preg %>% gather(male, female, key="gender", value=cases) %>%
+  spread(key = pregnant, value=cases) %>%
+  rename(not_pregnant=no, pregnant=yes)
+```
+```
+
+## 12.4.3 Exercises
+
+### 1.
+
+```{r}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+separate(x, c("one", "two", "three")) # g gets lost
+
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+separate(x, c("one", "two", "three"),extra="drop") # g gets lost, no warning
+
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+separate(x, c("one", "two", "three"), extra="merge") # f,g remain unseparated
+
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+separate(x, c("one", "two", "three")) #NA for row 2, column 3 + warning
+
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+separate(x, c("one", "two", "three"),fill="right") #NA for row 2, column 3 no warning 
+
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+separate(x, c("one", "two", "three"),fill="left") #NA for row 2, column 1 no warning 
+
+```
+
+
+### 2.
+
+Keep the original data column intact
+
+### 3
+
+Separate separates by definine the separator, extract separates by regular rexpression groups.
+
+Well because unite you always want to define the separator...
+
