@@ -89,7 +89,7 @@ stocks %>%
 ```
 `year` gets converted to a character (since it was cycled through a column name)
 
-the order chagnes
+the order changes
 
 the `convert` argument converts data types, so:
 
@@ -177,7 +177,7 @@ people
 people %>% spread(key = key,value = value)
 ```
 
-Fails because "Phillip Woods" is represted twice
+Fails because "Phillip Woods" is represented twice
 
 
 ```r

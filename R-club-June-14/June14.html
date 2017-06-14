@@ -178,7 +178,7 @@ stocks</code></pre>
 ## 3     1  2016   0.92
 ## 4     2  2016   0.17</code></pre>
 <p><code>year</code> gets converted to a character (since it was cycled through a column name)</p>
-<p>the order chagnes</p>
+<p>the order changes</p>
 <p>the <code>convert</code> argument converts data types, so:</p>
 <pre class="r"><code>stocks %&gt;% 
   spread(year, return) %&gt;% 
@@ -233,7 +233,7 @@ people</code></pre>
 ## 4 Jessica Cordero    age    37
 ## 5 Jessica Cordero height   156</code></pre>
 <pre class="r"><code>people %&gt;% spread(key = key,value = value)</code></pre>
-<p>Fails because “Phillip Woods” is represted twice</p>
+<p>Fails because “Phillip Woods” is represented twice</p>
 <pre class="r"><code>people  %&gt;% group_by(name,key) %&gt;% 
   mutate(observation=row_number()) %&gt;% 
   spread(key = key,value = value)</code></pre>
@@ -371,7 +371,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>
