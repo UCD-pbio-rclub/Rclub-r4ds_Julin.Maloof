@@ -1,0 +1,202 @@
+---
+title: "June21"
+author: "Julin N Maloof"
+date: "6/20/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+who1 <- who %>% 
+  gather(new_sp_m014:newrel_f65,key="key",value="cases",na.rm=TRUE)
+who1
+```
+
+```{r}
+who1 %>% count(key)
+```
+
+```{r}
+who2 <- who1 %>% 
+  mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
+who2
+```
+
+```{r}
+who3 <- who2 %>%
+  separate(key,c("new","type","sexage"), sep ="_")
+who3
+```
+
+```{r}
+who4 <- who3 %>%
+  select(-new,-iso2,-iso3)
+who4
+```
+
+```{r}
+who5 <- who4 %>%
+  separate(sexage,c("sex","age"), sep=1)
+who5
+```
+
+## 12.6.1
+
+### Q1
+
+_In this case study I set `na.rm = TRUE` just to make it easier to check that we had the correct values. Is this reasonable? Think about how missing values are represented in this dataset. Are there implicit missing values? What’s the difference between an NA and zero?_
+
+first, lets repeat this, but without `na.rm=TRUE`
+```{r}
+who %>%   gather(new_sp_m014:newrel_f65,key="key",value="cases")
+```
+
+OK generally the NAs appear in early years for  given site.  So they probably represent areas/years where the study was not running.  In contrast, "0" means no cases recorded, but they would have been if presented.
+
+### Q2
+
+_What happens if you neglect the mutate() step?_
+
+In this case either we will get an error when we separate, or the data will not go into the columns appropriately.
+
+```{r}
+  who10 <- who %>% gather(code, value, new_sp_m014:newrel_f65, na.rm = TRUE) %>% 
+  separate(code, c("new", "var", "sexage"))
+who10
+who10[73465:73470,]
+```
+
+yes.  warnings and then sexage ends up in var for these samples.
+
+### Q3 
+_I claimed that iso2 and iso3 were redundant with country. Confirm this claim._
+
+```{r}
+who %>% count(country,iso2,iso3)
+who %>% group_by(country) %>% 
+  summarize(iso2=n_distinct(iso2),iso3=n_distinct(iso3)) %>% # counts the number of distinct classes of iso2 and iso 3 per country
+  summarise(max_iso2=max(iso2),max_iso3=max(iso3)) # look for maximum.  
+```
+
+### Q4
+_For each country, year, and sex compute the total number of cases of TB. Make an informative visualisation of the data._
+
+```{r}
+who.tidy <- who %>%
+  gather(code, value, new_sp_m014:newrel_f65, na.rm = TRUE) %>% 
+  mutate(code = stringr::str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+```
+
+```{r}
+case.summary <- who.tidy %>% 
+  group_by(country, year, sex) %>%
+  summarize(cases=sum(value))
+case.summary
+```
+
+```{r}
+#how many countries?
+length(unique(case.summary$country))
+```
+
+How to make a useful plot with 219 countries?
+
+first lest get rid of years without data from many countries
+```{r}
+case.summary.small <- case.summary %>% group_by(year) %>% filter(n_distinct(country) > 2)
+ggplot(case.summary.small,aes(x=year,y=country,color=sex,size=log10(cases))) + 
+  geom_point() +
+  scale_size(range = c(0,2))
+```
+
+```{r}
+ggplot(case.summary.small,aes(x=year,y=country,fill=log10(cases))) + 
+  geom_raster() +
+  facet_wrap(~ sex) 
+```
+
+```{r}
+ggplot(case.summary.small,aes(x=year,y=cases+.1,group=country)) +
+  geom_line(alpha=.3) +
+  scale_y_log10() +
+  facet_wrap(~sex)
+```
+
+## Chapter 13
+
+```{r}
+library(nycflights13)
+```
+
+## 13.2.1
+
+### 1
+
+_Imagine you wanted to draw (approximately) the route each plane flies from its origin to its destination. What variables would you need? What tables would you need to combine?_
+
+I don't get it.  I think I am missing some info here that is not in any table.
+
+### 2
+
+_I forgot to draw the relationship between weather and airports. What is the relationship and how should it appear in the diagram?_
+
+A line from origin (weather) to faa (airports)
+
+### 3
+
+_weather only contains information for the origin (NYC) airports. If it contained weather records for all airports in the USA, what additional relation would it define with flights?_
+
+dest
+
+### 4
+
+_We know that some days of the year are “special”, and fewer people than usual fly on them. How might you represent that data as a data frame? What would be the primary keys of that table? How would it connect to the existing tables?_
+
+columns for holiday name with month, day, (and maybe year).  Maybe you'd have every day in the year in the table with a column for whether or not it was weekday, weekend, or holiday.
+
+## 13.3.1
+
+### 1
+
+Add a surrogate key to flights.
+
+```{r}
+flights <- flights %>% mutate(ID=row_number())
+flights %>% select(ID, everything())
+```
+
+### 2
+
+Identify the keys in the following datasets
+
+Lahman::Batting,
+babynames::babynames
+nasaweather::atmos
+fueleconomy::vehicles
+ggplot2::diamonds
+
+```{r}
+?Lahman::Batting
+Lahman::Batting %>% count(playerID,yearID,teamID) %>% filter(n>1)
+Lahman::Batting %>% filter(playerID=="anderjo01" & yearID==1898)
+Lahman::Batting %>% count(playerID,yearID,stint) %>% filter(n>1)
+```
+
+### 3
+
+playerID connects `batting` to `Master` and connects `Salaries` to `master`
+
+yearID,teamID,playerID connect `batting` to `Salaries`
