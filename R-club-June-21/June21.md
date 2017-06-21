@@ -176,30 +176,81 @@ who5
 
 _In this case study I set `na.rm = TRUE` just to make it easier to check that we had the correct values. Is this reasonable? Think about how missing values are represented in this dataset. Are there implicit missing values? What’s the difference between an NA and zero?_
 
-first, lets repeat this, but without `na.rm=TRUE`
+first, let's repeat this, but without `na.rm=TRUE`
 
 ```r
-who %>%   gather(new_sp_m014:newrel_f65,key="key",value="cases")
+who.tidy.na <- who %>%    gather(code, value, new_sp_m014:newrel_f65) %>% 
+  mutate(code = stringr::str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+who.tidy.na
 ```
 
 ```
 ## # A tibble: 405,440 × 6
-##        country  iso2  iso3  year         key cases
-##          <chr> <chr> <chr> <int>       <chr> <int>
-## 1  Afghanistan    AF   AFG  1980 new_sp_m014    NA
-## 2  Afghanistan    AF   AFG  1981 new_sp_m014    NA
-## 3  Afghanistan    AF   AFG  1982 new_sp_m014    NA
-## 4  Afghanistan    AF   AFG  1983 new_sp_m014    NA
-## 5  Afghanistan    AF   AFG  1984 new_sp_m014    NA
-## 6  Afghanistan    AF   AFG  1985 new_sp_m014    NA
-## 7  Afghanistan    AF   AFG  1986 new_sp_m014    NA
-## 8  Afghanistan    AF   AFG  1987 new_sp_m014    NA
-## 9  Afghanistan    AF   AFG  1988 new_sp_m014    NA
-## 10 Afghanistan    AF   AFG  1989 new_sp_m014    NA
+##        country  year   var   sex   age value
+## *        <chr> <int> <chr> <chr> <chr> <int>
+## 1  Afghanistan  1980    sp     m   014    NA
+## 2  Afghanistan  1981    sp     m   014    NA
+## 3  Afghanistan  1982    sp     m   014    NA
+## 4  Afghanistan  1983    sp     m   014    NA
+## 5  Afghanistan  1984    sp     m   014    NA
+## 6  Afghanistan  1985    sp     m   014    NA
+## 7  Afghanistan  1986    sp     m   014    NA
+## 8  Afghanistan  1987    sp     m   014    NA
+## 9  Afghanistan  1988    sp     m   014    NA
+## 10 Afghanistan  1989    sp     m   014    NA
 ## # ... with 405,430 more rows
 ```
 
 OK generally the NAs appear in early years for  given site.  So they probably represent areas/years where the study was not running.  In contrast, "0" means no cases recorded, but they would have been if presented.
+
+Are there implicit missing values?  Compare length of data frame +/- complete
+
+
+```r
+nrow(who.tidy.na)
+```
+
+```
+## [1] 405440
+```
+
+```r
+who.tidy.na %>% complete(country,year,var,sex) %>% nrow()
+```
+
+```
+## [1] 407088
+```
+So there must be some implicit NAs.  Which ones?
+
+
+```r
+who.tidy.na %>% mutate(missing=ifelse(is.na(value),"explicit.missing","observed")) %>%
+  complete(country,year,var,sex,fill=list(missing="implicit.missing")) %>% # Needed because NAs get replaced with the new value
+  filter(missing=="implicit.missing")
+```
+
+```
+## # A tibble: 1,648 × 7
+##                              country  year   var   sex   age value
+##                                <chr> <int> <chr> <chr> <chr> <int>
+## 1  Bonaire, Saint Eustatius and Saba  1980    ep     f  <NA>    NA
+## 2  Bonaire, Saint Eustatius and Saba  1980    ep     m  <NA>    NA
+## 3  Bonaire, Saint Eustatius and Saba  1980   rel     f  <NA>    NA
+## 4  Bonaire, Saint Eustatius and Saba  1980   rel     m  <NA>    NA
+## 5  Bonaire, Saint Eustatius and Saba  1980    sn     f  <NA>    NA
+## 6  Bonaire, Saint Eustatius and Saba  1980    sn     m  <NA>    NA
+## 7  Bonaire, Saint Eustatius and Saba  1980    sp     f  <NA>    NA
+## 8  Bonaire, Saint Eustatius and Saba  1980    sp     m  <NA>    NA
+## 9  Bonaire, Saint Eustatius and Saba  1981    ep     f  <NA>    NA
+## 10 Bonaire, Saint Eustatius and Saba  1981    ep     m  <NA>    NA
+## # ... with 1,638 more rows, and 1 more variables: missing <chr>
+```
+
+
 
 ### Q2
 
@@ -367,7 +418,7 @@ ggplot(case.summary.small,aes(x=year,y=country,color=sex,size=log10(cases))) +
 ## Warning: Removed 142 rows containing missing values (geom_point).
 ```
 
-![](June21_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](June21_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 
 ```r
@@ -376,7 +427,7 @@ ggplot(case.summary.small,aes(x=year,y=country,fill=log10(cases))) +
   facet_wrap(~ sex) 
 ```
 
-![](June21_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](June21_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 
 ```r
@@ -386,7 +437,7 @@ ggplot(case.summary.small,aes(x=year,y=cases+.1,group=country)) +
   facet_wrap(~sex)
 ```
 
-![](June21_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](June21_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 ## Chapter 13
 

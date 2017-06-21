@@ -238,23 +238,51 @@ who5</code></pre>
 <div id="q1" class="section level3">
 <h3>Q1</h3>
 <p><em>In this case study I set <code>na.rm = TRUE</code> just to make it easier to check that we had the correct values. Is this reasonable? Think about how missing values are represented in this dataset. Are there implicit missing values? What’s the difference between an NA and zero?</em></p>
-<p>first, lets repeat this, but without <code>na.rm=TRUE</code></p>
-<pre class="r"><code>who %&gt;%   gather(new_sp_m014:newrel_f65,key=&quot;key&quot;,value=&quot;cases&quot;)</code></pre>
+<p>first, let’s repeat this, but without <code>na.rm=TRUE</code></p>
+<pre class="r"><code>who.tidy.na &lt;- who %&gt;%    gather(code, value, new_sp_m014:newrel_f65) %&gt;% 
+  mutate(code = stringr::str_replace(code, &quot;newrel&quot;, &quot;new_rel&quot;)) %&gt;%
+  separate(code, c(&quot;new&quot;, &quot;var&quot;, &quot;sexage&quot;)) %&gt;% 
+  select(-new, -iso2, -iso3) %&gt;% 
+  separate(sexage, c(&quot;sex&quot;, &quot;age&quot;), sep = 1)
+who.tidy.na</code></pre>
 <pre><code>## # A tibble: 405,440 × 6
-##        country  iso2  iso3  year         key cases
-##          &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;int&gt;       &lt;chr&gt; &lt;int&gt;
-## 1  Afghanistan    AF   AFG  1980 new_sp_m014    NA
-## 2  Afghanistan    AF   AFG  1981 new_sp_m014    NA
-## 3  Afghanistan    AF   AFG  1982 new_sp_m014    NA
-## 4  Afghanistan    AF   AFG  1983 new_sp_m014    NA
-## 5  Afghanistan    AF   AFG  1984 new_sp_m014    NA
-## 6  Afghanistan    AF   AFG  1985 new_sp_m014    NA
-## 7  Afghanistan    AF   AFG  1986 new_sp_m014    NA
-## 8  Afghanistan    AF   AFG  1987 new_sp_m014    NA
-## 9  Afghanistan    AF   AFG  1988 new_sp_m014    NA
-## 10 Afghanistan    AF   AFG  1989 new_sp_m014    NA
+##        country  year   var   sex   age value
+## *        &lt;chr&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;int&gt;
+## 1  Afghanistan  1980    sp     m   014    NA
+## 2  Afghanistan  1981    sp     m   014    NA
+## 3  Afghanistan  1982    sp     m   014    NA
+## 4  Afghanistan  1983    sp     m   014    NA
+## 5  Afghanistan  1984    sp     m   014    NA
+## 6  Afghanistan  1985    sp     m   014    NA
+## 7  Afghanistan  1986    sp     m   014    NA
+## 8  Afghanistan  1987    sp     m   014    NA
+## 9  Afghanistan  1988    sp     m   014    NA
+## 10 Afghanistan  1989    sp     m   014    NA
 ## # ... with 405,430 more rows</code></pre>
 <p>OK generally the NAs appear in early years for given site. So they probably represent areas/years where the study was not running. In contrast, “0” means no cases recorded, but they would have been if presented.</p>
+<p>Are there implicit missing values? Compare length of data frame +/- complete</p>
+<pre class="r"><code>nrow(who.tidy.na)</code></pre>
+<pre><code>## [1] 405440</code></pre>
+<pre class="r"><code>who.tidy.na %&gt;% complete(country,year,var,sex) %&gt;% nrow()</code></pre>
+<pre><code>## [1] 407088</code></pre>
+<p>So there must be some implicit NAs. Which ones?</p>
+<pre class="r"><code>who.tidy.na %&gt;% mutate(missing=ifelse(is.na(value),&quot;explicit.missing&quot;,&quot;observed&quot;)) %&gt;%
+  complete(country,year,var,sex,fill=list(missing=&quot;implicit.missing&quot;)) %&gt;% # Needed because NAs get replaced with the new value
+  filter(missing==&quot;implicit.missing&quot;)</code></pre>
+<pre><code>## # A tibble: 1,648 × 7
+##                              country  year   var   sex   age value
+##                                &lt;chr&gt; &lt;int&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;int&gt;
+## 1  Bonaire, Saint Eustatius and Saba  1980    ep     f  &lt;NA&gt;    NA
+## 2  Bonaire, Saint Eustatius and Saba  1980    ep     m  &lt;NA&gt;    NA
+## 3  Bonaire, Saint Eustatius and Saba  1980   rel     f  &lt;NA&gt;    NA
+## 4  Bonaire, Saint Eustatius and Saba  1980   rel     m  &lt;NA&gt;    NA
+## 5  Bonaire, Saint Eustatius and Saba  1980    sn     f  &lt;NA&gt;    NA
+## 6  Bonaire, Saint Eustatius and Saba  1980    sn     m  &lt;NA&gt;    NA
+## 7  Bonaire, Saint Eustatius and Saba  1980    sp     f  &lt;NA&gt;    NA
+## 8  Bonaire, Saint Eustatius and Saba  1980    sp     m  &lt;NA&gt;    NA
+## 9  Bonaire, Saint Eustatius and Saba  1981    ep     f  &lt;NA&gt;    NA
+## 10 Bonaire, Saint Eustatius and Saba  1981    ep     m  &lt;NA&gt;    NA
+## # ... with 1,638 more rows, and 1 more variables: missing &lt;chr&gt;</code></pre>
 </div>
 <div id="q2" class="section level3">
 <h3>Q2</h3>

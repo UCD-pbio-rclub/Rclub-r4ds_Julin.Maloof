@@ -56,12 +56,33 @@ who5
 
 _In this case study I set `na.rm = TRUE` just to make it easier to check that we had the correct values. Is this reasonable? Think about how missing values are represented in this dataset. Are there implicit missing values? What’s the difference between an NA and zero?_
 
-first, lets repeat this, but without `na.rm=TRUE`
+first, let's repeat this, but without `na.rm=TRUE`
 ```{r}
-who %>%   gather(new_sp_m014:newrel_f65,key="key",value="cases")
+who.tidy.na <- who %>%    gather(code, value, new_sp_m014:newrel_f65) %>% 
+  mutate(code = stringr::str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+who.tidy.na
 ```
 
 OK generally the NAs appear in early years for  given site.  So they probably represent areas/years where the study was not running.  In contrast, "0" means no cases recorded, but they would have been if presented.
+
+Are there implicit missing values?  Compare length of data frame +/- complete
+
+```{r}
+nrow(who.tidy.na)
+who.tidy.na %>% complete(country,year,var,sex) %>% nrow()
+```
+So there must be some implicit NAs.  Which ones?
+
+```{r}
+who.tidy.na %>% mutate(missing=ifelse(is.na(value),"explicit.missing","observed")) %>%
+  complete(country,year,var,sex,fill=list(missing="implicit.missing")) %>% # Needed because NAs get replaced with the new value
+  filter(missing=="implicit.missing")
+```
+
+
 
 ### Q2
 
