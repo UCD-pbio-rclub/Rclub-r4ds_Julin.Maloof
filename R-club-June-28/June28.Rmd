@@ -1,0 +1,243 @@
+---
+title: "June 28"
+author: "Julin N Maloof"
+date: "6/27/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, autodep = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+library(magrittr)
+```
+
+
+# Chapter 13
+
+## 13.3.1 Exercises
+
+### 1
+
+_Add a surrogate key to flights._
+
+Because there are no unique combination of columns that can be a key we just create a sequential ID key
+```{r}
+flights <- flights %>% mutate(ID=row_number())
+flights %>% select(ID, everything()) #so that we can put ID as the first column
+```
+
+### 2
+
+_Identify the keys in the following datasets_
+
+#### Lahman::Batting,
+
+```{r}
+?Lahman::Batting
+Lahman::Batting %>% count(playerID,yearID,teamID) %>% filter(n>1) #nope
+```
+
+No!
+
+What is the problem? Look at an example
+```{r}
+Lahman::Batting %>% filter(playerID=="anderjo01" & yearID==1898)
+```
+He played for two teams in the same season!
+
+How about
+```{r}
+Lahman::Batting %>% count(playerID,yearID,stint) %>% filter(n>1)
+```
+Yes!
+
+#### babynames::babynames
+
+```{r}
+library(babynames)
+?babynames
+head(babynames)
+```
+
+keys should be year, sex, and name
+
+```{r}
+babynames %>% count(year,sex,name) %>% arrange(desc(nn))
+```
+
+#### nasaweather::atmos
+
+```{r}
+library(nasaweather)
+?atmos
+head(atmos)
+```
+
+should be lat,long,year,month
+
+```{r}
+atmos %>% count(lat,long,year,month) %>% arrange(desc(n))
+```
+
+#### fueleconomy::vehicles
+
+```{r}
+library(fueleconomy)
+head(vehicles)
+```
+
+```{r}
+vehicles %>% count(id) %>% arrange(desc(n))
+```
+
+#### ggplot2::diamonds
+```{r}
+?diamonds
+head(diamonds)
+diamonds <- diamonds %>% mutate(ID=row_number()) %>% select(ID,everything())
+diamonds
+```
+
+
+### 3
+
+_Draw a diagram illustrating the connections between the Batting, Master, and Salaries tables in the Lahman package. Draw another diagram that shows the relationship between Master, Managers, AwardsManagers._
+
+playerID connects `batting` to `Master` and connects `Salaries` to `master`
+
+yearID,teamID,playerID connect `batting` to `Salaries`
+
+Try this with the datamodelr package
+
+```{r}
+library(datamodelr)
+library(Lahman)
+```
+
+Create data model
+```{r}
+dm_lahman <- dm_from_data_frames(Batting,Master,Salaries)
+```
+
+```{r}
+dm_lahman %>% dm_create_graph() %>% dm_render_graph()
+```
+
+add references
+
+```{r}
+dm_lahman %<>% dm_add_references(Master$playerID==Batting$playerID,
+                                 Batting$yearID==Salaries$yearID,
+                                 Batting$playerID==Salaries$playerID,
+                                 Batting$teamID==Salaries$teamID)
+```
+
+```{r}
+dm_lahman %>% dm_create_graph(rankdir="LR") %>% dm_render_graph()
+```
+
+```{r}
+dm_lahman %>% dm_create_graph(rankdir="LR",view_type="keys_only") %>% dm_render_graph()
+```
+Unfortunately the arrows do not go directly from key to key, but the "~" and underlines help sort it out...
+
+```{r}
+dm_lahman2 <- dm_from_data_frames(Master,Managers,AwardsManagers)
+dm_lahman2 %>% dm_create_graph() %>% dm_render_graph()
+```
+
+set references
+```{r}
+dm_lahman2 %<>% dm_add_references(Managers$lgID==AwardsManagers$lgID,
+                                  Managers$playerID==Master$playerID,
+                                  Master$playerID==AwardsManagers$playerID,
+                                  Managers$playerID==AwardsManagers$playerID,
+                                  Managers$yearID==AwardsManagers$yearID)
+```
+
+```{r}
+dm_lahman2 %>% dm_create_graph() %>% dm_render_graph()
+```
+
+```{r}
+dm_lahman2 %>% dm_create_graph(view_type = "keys_only",rankdir="LR") %>% dm_render_graph()
+```
+
+Not perfect...can only have key going somewhere once, etc.
+
+```{r}
+
+```
+
+## 13.4
+
+```{r}
+flights2 <- flights %>% 
+  select(year:day, hour, origin, dest, tailnum, carrier)
+flights2
+```
+
+inner_join joins based on matching key and only retains those oberservations where the key matches.  __Unmatched rows are not included__
+
+outer_joins keep additional unmatched observations.  left join keeps all observations in the left object, right join keeps all in the right object, and full join keeps both.
+
+what about duplicate keys?
+
+if one table has duplicate keys and the other doesn't then it is easy, the info from the non-duplicated table is added to each of the duplicated key table.
+
+if both table has duplicate keys then you get all possible combinations. This is probably not what you want.
+
+if you omit "by" then all column names present in both tables are used.
+
+"by" can be a named character vector that specifys the relationships between the x and y columns
+
+## 13.4.6 Exercises
+
+### 1
+
+_Compute the average delay by destination, then join on the airports data frame so you can show the spatial distribution of delays. Here’s an easy way to draw a map of the United States:_
+
+```{r}
+airports %>%
+  semi_join(flights, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```
+
+_You might want to use the size or colour of the points to display the average delay for each airport._
+
+
+```{r}
+flights %>% 
+  group_by(dest) %>% 
+  summarize(avg_delay = mean(arr_delay,na.rm=T)) %>%
+  inner_join(airports, c("dest" = "faa")) %>%
+  ggplot(aes(x=lon,y=lat,fill=avg_delay)) +
+  borders("state") +
+  geom_point(stroke=1,shape=21,size=3) +
+  coord_quickmap() +
+  scale_fill_gradient2(low="blue",mid="white",high="red") +
+  xlim(c(-125,-65)) + ylim(c(25,50))
+```
+
+#### 2
+
+_Add the location of the origin and destination (i.e. the lat and lon) to flights._
+
+```{r}
+airports %>% select(faa,lat,lon) %>%
+  right_join(flights,by=c("faa" = "origin")) %>%
+  rename(lat.origin=lat, lon.origin=lon) %>%
+  left_join(airports, by=c("dest" = "faa")) %>%
+  rename(lat.dest=lat, lon.dest=lon) %>%
+  select(-faa, -name, -alt, starts_with("lat"), starts_with("lon"))
+```
+
