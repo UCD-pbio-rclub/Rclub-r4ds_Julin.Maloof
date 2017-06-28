@@ -241,3 +241,113 @@ airports %>% select(faa,lat,lon) %>%
   select(-faa, -name, -alt, starts_with("lat"), starts_with("lon"))
 ```
 
+### 3
+
+_Is there a relationship between the age of a plane and its delays?_
+
+```{r}
+head(planes)
+by_tail <- flights %>% group_by(tailnum) %>%
+  summarize(avg_delay=mean(arr_delay,na.rm=TRUE))
+planes %>% mutate(age=2013-year) %>% select(tailnum,age) %>%
+  inner_join(by_tail,by="tailnum") %>%
+  ggplot(aes(x=age,y=avg_delay)) + geom_point() + geom_smooth()
+  
+```
+
+No relationship between age and delay
+
+### 4
+
+_What weather conditions make it more likely to see a delay?_
+
+```{r}
+head(weather)
+head(flights)
+```
+
+Need to create an "hour" column in flights.  should be rounded to the nearest hour...
+
+```{r}
+flight_weather <- flights %>% mutate(sched_dep_hour=round(sched_dep_time%/%100 + # get the hour
+                     (sched_dep_time %% 100) / 60,#get the minuted, convert to fraction
+                     0)) %>% # round to 0 decimals 
+  inner_join(weather,
+             by=c("origin"="origin",
+                  "year"="year",
+                  "month"="month",
+                  "day"="day",
+                  "sched_dep_hour"="hour")) %>%
+  select(ID, dep_delay, temp, dewp, humid, starts_with("wind"), precip, pressure, visib)
+flight_weather
+```
+
+```{r}
+flight_weather %>% select(-ID,dep_delay) %>%
+  cor(flight_weather$dep_delay,use="pairwise.complete.obs")
+```
+
+```{r}
+flight_weather %>% select(-ID,-dep_delay) %>%
+  apply(2,function(x) {cor.test(x,flight_weather$dep_delay)$p.value})
+```
+
+everything is significant.  The largest correlations for delays are:
+
+* high dewpoint (= fog)
+* low pressure (= storm)
+* low visibility
+
+let's plot one of these
+
+```{r}
+qplot(visib,dep_delay,data=flight_weather,alpha=.1) + geom_smooth()
+flight_weather %>% ggplot(aes(x=as.factor(visib),y=dep_delay)) + geom_boxplot()
+```
+
+
+
+## Exercises 13.5.1
+
+### 1 
+_What does it mean for a flight to have a missing tailnum? What do the tail numbers that don’t have a matching record in planes have in common? (Hint: one variable explains ~90% of the problems.)_
+
+```{r}
+flights %>% anti_join(planes,by = "tailnum")
+flights %>% anti_join(planes,by = "tailnum") %>% 
+  count(carrier)
+```
+
+
+### 2
+_Filter flights to only show flights with planes that have flown at least 100 flights._
+
+```{r}
+flights %>% group_by(tailnum) %>% filter(n()>100)
+```
+
+### 3
+_Combine fueleconomy::vehicles and fueleconomy::common to find only the records for the most common models._
+
+```{r}
+head(fueleconomy::common)
+head(fueleconomy::vehicles)
+fueleconomy::vehicles %>% semi_join(fueleconomy::common)
+```
+
+### 4
+_Find the 48 hours (over the course of the whole year) that have the worst delays. Cross-reference it with the weather data. Can you see any patterns?_
+
+```{r}
+flights %>% group_by(year,month,day,hour) %>% 
+  summarize(mean_dep_delay_hour=mean(dep_delay,na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(mean_delay48=roll_mean(mean_dep_delay_hour,n=48,fill=NA)) %>%
+  filter(mean_delay48==max(mean_delay48,na.rm=TRUE)) %>%
+  semi_join(weather,.,by=c("month","day")) %>% summary() # but really we should look at this whole period...
+```
+
+
+What does anti_join(flights, airports, by = c("dest" = "faa")) tell you? What does anti_join(airports, flights, by = c("faa" = "dest")) tell you?
+
+You might expect that there’s an implicit relationship between plane and airline, because each plane is flown by a single airline. Confirm or reject this hypothesis using the tools you’ve learned above.
