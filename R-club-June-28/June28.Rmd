@@ -339,6 +339,7 @@ fueleconomy::vehicles %>% semi_join(fueleconomy::common)
 _Find the 48 hours (over the course of the whole year) that have the worst delays. Cross-reference it with the weather data. Can you see any patterns?_
 
 ```{r}
+library(RcppRoll)
 flights %>% group_by(year,month,day,hour) %>% 
   summarize(mean_dep_delay_hour=mean(dep_delay,na.rm=TRUE)) %>%
   ungroup() %>%
@@ -347,7 +348,37 @@ flights %>% group_by(year,month,day,hour) %>%
   semi_join(weather,.,by=c("month","day")) %>% summary() # but really we should look at this whole period...
 ```
 
+### 5
+_What does anti_join(flights, airports, by = c("dest" = "faa")) tell you? What does anti_join(airports, flights, by = c("faa" = "dest")) tell you?_
 
-What does anti_join(flights, airports, by = c("dest" = "faa")) tell you? What does anti_join(airports, flights, by = c("faa" = "dest")) tell you?
+```{r}
+anti_join(flights, airports, by = c("dest" = "faa"))
+```
+These are flights where the destination airport is not listed in the airports table
 
-You might expect that there’s an implicit relationship between plane and airline, because each plane is flown by a single airline. Confirm or reject this hypothesis using the tools you’ve learned above.
+```{r}
+anti_join(airports, flights, by = c("faa" = "dest"))
+```
+These are airports that were not a destination for any flights.  (or not airports in many cases)
+
+### 6
+_You might expect that there’s an implicit relationship between plane and airline, because each plane is flown by a single airline. Confirm or reject this hypothesis using the tools you’ve learned above._
+
+Is each plane flown by a single airline?  I don't see why I need a join function for this...
+```{r}
+flights %>% group_by(tailnum) %>% summarize(n_carriers = n_distinct(carrier)) %>% filter(n_carriers>1)
+```
+No: 18 planes were flown by two airlines
+
+which airlines?
+```{r}
+flights %>% group_by(tailnum) %>% summarize(n_carriers = n_distinct(carrier)) %>% filter(n_carriers>1) %>%
+  filter(!is.na(tailnum)) %>%
+  semi_join(flights,.) %>%
+  group_by(tailnum) %>%
+  filter(!duplicated(carrier)) %>%
+  select(tailnum, carrier) %>%
+  left_join(airlines)
+
+```
+
