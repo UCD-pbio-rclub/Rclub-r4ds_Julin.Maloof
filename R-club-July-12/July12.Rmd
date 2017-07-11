@@ -1,0 +1,12 @@
+---
+title: "July 12"
+author: "Julin N Maloof"
+date: "7/11/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
