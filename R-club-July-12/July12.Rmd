@@ -9,4 +9,27 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(stringr)
 ```
+
+## Exercises 14.2.5
+
+### 1
+_In code that doesn’t use stringr, you’ll often see paste() and paste0(). What’s the difference between the two functions? What stringr function are they equivalent to? How do the functions differ in their handling of NA?_
+
+`paste` has a default separator of " " whereas `paste0` has a default separator of "" (no separator).  
+
+`paste0` equivalent to `str_c` and `paste` is equivalent to `str_c(...,sep =" ")`
+
+test NA behavior
+```{r}
+test <- c("A",NA,"B")
+paste("prefix",test)
+
+paste0("prefix",test)
+
+str_c("prefix",test)
+```
+
+paste and paste0 treat NA as a character string whereas str_c does not.
