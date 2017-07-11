@@ -318,6 +318,10 @@ flights %>% anti_join(planes,by = "tailnum") %>%
   count(carrier)
 ```
 
+```{r}
+
+```
+
 
 ### 2
 _Filter flights to only show flights with planes that have flown at least 100 flights._
