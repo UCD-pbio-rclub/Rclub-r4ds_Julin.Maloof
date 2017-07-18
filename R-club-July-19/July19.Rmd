@@ -1,0 +1,108 @@
+---
+title: "Untitled"
+author: "Julin N Maloof"
+date: "7/17/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(stringr)
+```
+
+## 14.4.2 Exercises
+
+### 1
+_Find all words that start or end with x_
+```{r}
+mywords <- c(words,"xylophone","xeriscape","xanax")
+str_subset(mywords,"^x|x$")
+
+mywords[str_detect(mywords,"^x") | str_detect(mywords,"x$")]
+```
+
+_Find all words that start with a vowel and end with a consonant._
+
+```{r}
+str_subset(mywords,"^[aeiou].?[^aeiou]$")
+
+mywords %>% extract(str_detect(.,"^[aeiou]") & ! str_detect(.,"[aeiou]$"))
+```
+
+_Are there any words that contain at least one of each different vowel?_
+
+Not sure how to do this in single regex
+
+```{r}
+mywords %>% extract(.,
+                    str_detect(.,"a") & 
+                      str_detect(.,"e") & 
+                      str_detect(.,"i") & 
+                      str_detect(.,"o") & 
+                      str_detect(.,"u") 
+)
+    
+```
+
+
+### 2
+
+_What word has the highest number of vowels? What word has the highest proportion of vowels? (Hint: what is the denominator?)_
+
+```{r}
+words.df <- tibble(
+  word=mywords)
+
+#total vowels
+words.df %>% mutate(vowels=str_count(word,"[aeiou]")) %>% arrange(desc(vowels))
+
+#average vowels
+words.df %>% 
+  mutate(vowels=str_count(word,"[aeiou]"),
+         letters=str_length(word),
+         proportion=vowels/letters) %>% 
+  arrange(desc(proportion))
+```
+
+## 14.4.3.1 Exercises
+
+### 1 
+_In the previous example, you might have noticed that the regular expression matched “flickered”, which is not a colour. Modify the regex to fix the problem._
+```{r}
+colors <- c("red", "orange", "yellow", "green", "blue", "purple")
+color_match <- str_c("\\b",colors,"\\b", collapse = "|")
+color_match
+```
+
+```{r}
+more <- sentences[str_count(sentences, color_match) > 1]
+str_view_all(more, color_match)
+```
+
+### 2
+_From the Harvard sentences data, extract:_
+
+_The first word from each sentence._
+_All words ending in ing._
+_All plurals._
+
+```{r}
+str_extract(sentences,"^\\w+\\b")
+```
+
+```{r}
+str_extract_all(sentences,"\\b\\w*ing\\b",simplify=TRUE) %>% extract(str_detect(.,"\\w+"))
+```
+
+```{r}
+str_extract_all(sentences,"\\b\\w*[^aeiousy' ]s\\b",simplify=TRUE) %>%
+  extract(str_detect(.,"\\w+")) %>%
+  unique() %>%
+  extract(!str_detect(.,  "(helps)|(its)"))
+```
