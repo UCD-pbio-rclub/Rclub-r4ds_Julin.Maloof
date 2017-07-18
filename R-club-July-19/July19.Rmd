@@ -97,12 +97,49 @@ str_extract(sentences,"^\\w+\\b")
 ```
 
 ```{r}
-str_extract_all(sentences,"\\b\\w*ing\\b",simplify=TRUE) %>% extract(str_detect(.,"\\w+"))
+ing <- "\\b\\w*ing\\b"
+sentences %>%
+  str_subset(ing) %>%
+  str_extract_all(ing) %>% 
+  unlist() %>%
+  unique()
 ```
 
 ```{r}
-str_extract_all(sentences,"\\b\\w*[^aeiousy' ]s\\b",simplify=TRUE) %>%
-  extract(str_detect(.,"\\w+")) %>%
+plurals <- "\\b\\w*[^aeiousy' ]s\\b"
+sentences %>% 
+  str_subset(plurals) %>% #only those sentences with a plural
+  str_extract_all(plurals,simplify=FALSE) %>%
+  unlist() %>%
   unique() %>%
-  extract(!str_detect(.,  "(helps)|(its)"))
+  .[!str_detect(.,"help|its")]
 ```
+
+## 14.4.1 Exercises
+
+### 1 
+_Find all words that come after a “number” like “one”, “two”, “three” etc. Pull out both the number and the word._
+
+```{r}
+numbers <- str_replace_all("(one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty)"," ","|")
+numbers
+
+pattern <- str_c(numbers,"\\s(\\w+)")
+pattern
+
+sentences %>% 
+  str_subset(pattern) %>%
+  str_match(pattern)
+```
+
+### 2
+_Find all contractions. Separate out the pieces before and after the apostrophe._
+```{r}
+pattern0 <- "([Ii]t's|[Ll]et's)|((\\w+)'([^s ]+))" #match all words with a "'" except for possesives
+pattern <- "(\\w+)'(\\w+)"
+
+sentences %>% 
+  str_subset(pattern0) %>%
+  str_match(pattern)
+```
+
