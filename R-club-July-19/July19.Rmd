@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "July 19"
 author: "Julin N Maloof"
 date: "7/17/2017"
 output: 
@@ -16,6 +16,8 @@ library(tidyverse)
 library(stringr)
 ```
 
+
+
 ## 14.4.2 Exercises
 
 ### 1
@@ -30,9 +32,9 @@ mywords[str_detect(mywords,"^x") | str_detect(mywords,"x$")]
 _Find all words that start with a vowel and end with a consonant._
 
 ```{r}
-str_subset(mywords,"^[aeiou].?[^aeiou]$")
+str_subset(mywords,"^[aeiou].*[^aeiou]$")
 
-mywords %>% extract(str_detect(.,"^[aeiou]") & ! str_detect(.,"[aeiou]$"))
+mywords %>% .[str_detect(.,"^[aeiou]") & ! str_detect(.,"[aeiou]$")]
 ```
 
 _Are there any words that contain at least one of each different vowel?_
@@ -40,13 +42,13 @@ _Are there any words that contain at least one of each different vowel?_
 Not sure how to do this in single regex
 
 ```{r}
-mywords %>% extract(.,
-                    str_detect(.,"a") & 
-                      str_detect(.,"e") & 
-                      str_detect(.,"i") & 
-                      str_detect(.,"o") & 
-                      str_detect(.,"u") 
-)
+mywords %>% .[
+  str_detect(.,"a") & 
+    str_detect(.,"e") & 
+    str_detect(.,"i") & 
+    str_detect(.,"o") & 
+    str_detect(.,"u") 
+  ]
     
 ```
 
@@ -141,5 +143,120 @@ pattern <- "(\\w+)'(\\w+)"
 sentences %>% 
   str_subset(pattern0) %>%
   str_match(pattern)
+```
+
+
+## 14.4.5.1 Exercises
+
+### 1
+_Replace all forward slashes in a string with backslashes._
+
+```{r}
+unixpath <- getwd()
+unixpath
+unixpath %>% str_replace_all("/","\\\\")
+```
+
+Can't figure out how to do it and get single backslashes
+
+_Implement a simple version of str_to_lower() using replace_all()._
+```{r}
+pattern <- letters
+names(pattern) <- LETTERS
+pattern
+sentences %>% str_replace_all(pattern) %>% head()
+```
+
+
+_Switch the first and last letters in words. Which of those strings are still words?_
+```{r}
+scramble <- words %>% str_replace_all("\\b(\\w){1}(\\w*)(\\w{1})\\b","\\3\\2\\1")
+head(scramble)
+```
+
+```{r}
+intersect(scramble,words)
+```
+
+
+## 14.4.6.1 Exercises
+
+### 1
+_Split up a string like "apples, pears, and bananas" into individual components._
+```{r}
+str_split("apples, pears, and bananas",pattern = "(, (and )?)")
+```
+
+
+### 2
+_Why is it better to split up by boundary("word") than " "?_
+
+words could be split by other characters than " "
+
+### 3
+_What does splitting with an empty string ("") do? Experiment, and then read the documentation._
+
+splits on every character
+```{r}
+str_split("apples, pears, and bananas",pattern = "")
+```
+
+
+## 14.5.1 Exercises
+
+### 1
+How would you find all strings containing \ with regex() vs. with fixed()?
+```{r}
+test <- c("has\\a\\backslash","no/backslash")
+
+str_subset(test,"\\\\") %>% writeLines
+
+str_subset(test,fixed("\\")) %>% writeLines
+```
+
+
+### 2
+What are the five most common words in sentences?
+
+```{r}
+sentences %>% 
+  str_split(boundary("word")) %>%
+  unlist() %>%
+  str_to_lower() %>%
+  tibble(word=.) %>%
+  count(word) %>%
+  arrange(desc(n)) %>%
+  filter(min_rank(desc(n)) < 6)
+```
+
+## 14.7.1 Exercises
+
+Find the stringi functions that:
+
+_Count the number of words._
+
+```{r}
+library(stringi)
+sentences %>% head()
+sentences %>% head() %>% stri_count_words()
+```
+
+
+_Find duplicated strings._
+```{r}
+stri_duplicated(c("one","two","three","one"))
+```
+
+Generate random text.
+
+```{r}
+stri_rand_strings(5,10)
+```
+
+How do you control the language that stri_sort() uses for sorting?
+
+```{r}
+stri_sort(words) %>% head()
+stri_sort(words,opts_collator = list(locale="fr")) %>% head()
 ```
 

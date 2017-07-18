@@ -291,7 +291,7 @@ _Construct regular expressions to match words that:_
 _1. Start and end with the same character._
 
 ```{r}
-pattern <- "\\W([A-Za-z])[a-z]*\\1\\W"
+pattern <- "\\W([:alpha:])[a-z]*\\1\\W"
 str_view_all("what silly sentence am I going to write for this exercise?",pattern)
 # not perfect: single character words.  Also caps need to be dealt with.  And match includes spaces
 ```
