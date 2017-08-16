@@ -1,0 +1,167 @@
+---
+title: "Aug 16th"
+author: "Julin N Maloof"
+date: "8/12/2017"
+output: html_document
+---
+
+## 19.2.1 Practice
+
+### 1. Why is TRUE not a parameter to rescale01()? What would happen if x contained a single missing value, and na.rm was FALSE?
+
+if na.rm=FALSE, then the return would be a single NA
+
+### 2. In the second variant of rescale01(), infinite values are left unchanged. Rewrite rescale01() so that -Inf is mapped to 0, and Inf is mapped to 1.
+
+```{r}
+x <- c(-Inf,1:10, Inf)
+
+rescale01 <- function(x) {
+  rng <- range(x, na.rm = TRUE, finite = TRUE)
+  x <- (x - rng[1]) / (rng[2] - rng[1])
+  x[x==Inf] <- 1
+  x[x==-Inf] <- 0
+  x
+}
+
+
+rescale01(x)
+```
+
+
+### 3. Practice turning the following code snippets into functions. Think about what each function does. What would you call it? How many arguments does it need? Can you rewrite it to be more expressive or less duplicative?
+
+```
+mean(is.na(x))
+
+x / sum(x, na.rm = TRUE)
+
+sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)
+```
+
+```{r}
+x <- c(1:5,NA,NA)
+
+meanNAs <- function(x) mean(is.na(x))
+
+meanNAs(x)
+```
+
+```{r}
+fraction_of_total <- function(x) x / sum(x, na.rm = TRUE)
+
+fraction_of_total(x)
+```
+
+```{r}
+cv <- function(x) sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)
+cv(x)
+```
+
+
+### 4. Follow http://nicercode.github.io/intro/writing-functions.html to write your own functions to compute the variance and skew of a numeric vector.
+
+
+
+### 5. Write both_na(), a function that takes two vectors of the same length and returns the number of positions that have an NA in both vectors.
+
+```{r}
+x <- c(1,2,3,NA,5,NA)
+y <- c(NA,2,3,NA,5,6)
+z <- c(NA,NA,NA,NA,NA,NA)
+both_na <- function(x,y) {
+  if(length(x) != length(y)) stop("x and y must be of equal length")
+  sum(is.na(x) & is.na(y))
+}
+
+both_na(x,y)
+
+both_na(x,z)
+```
+
+
+### 6. What do the following functions do? Why are they useful even though they are so short?
+
+```
+is_directory <- function(x) file.info(x)$isdir
+is_readable <- function(x) file.access(x, 4) == 0
+```
+
+They are useful because they are expressive about that they do and save typing.
+
+### 7. Read the complete lyrics to “Little Bunny Foo Foo”. There’s a lot of duplication in this song. Extend the initial piping example to recreate the complete song, and use functions to reduce the duplication.
+
+## 19.4.4 Exercises
+
+### 1. What’s the difference between if and ifelse()? Carefully read the help and construct three examples that illustrate the key differences.
+
+`if` works on a single value and takes a single action whereas `ifelse` is vectorized.  `ifelse` even retains dimensions...
+
+```{r}
+x <- 1:10
+
+if (x < 5) "small" else "big"
+
+ifelse(x < 5,"small","big")
+
+y <- matrix(1:9,ncol=3)
+
+ifelse(y < 5,"small","big")
+
+
+```
+
+
+
+
+### 2. Write a greeting function that says “good morning”, “good afternoon”, or “good evening”, depending on the time of day. (Hint: use a time argument that defaults to lubridate::now(). That will make it easier to test your function.)
+
+```{r}
+library(lubridate)
+library(hms)
+greeting <-function(time=lubridate::now()) {
+  as.character(cut(hour(time), breaks=c(0,12,18,24), labels=c("good morning","good afternoon", "good evening")))
+}
+
+greeting()
+greeting(hm("09:00"))
+greeting(hm("13:00"))
+greeting(hm("19:00"))
+```
+
+well that is a start.  Would be nicer to gracefully deal with inputs...
+
+### 3. Implement a fizzbuzz function. It takes a single number as input. If the number is divisible by three, it returns “fizz”. If it’s divisible by five it returns “buzz”. If it’s divisible by three and five, it returns “fizzbuzz”. Otherwise, it returns the number. Make sure you first write working code before you create the function.
+
+### 4. How could you use cut() to simplify this set of nested if-else statements?
+
+```{r}
+if (temp <= 0) {
+  "freezing"
+} else if (temp <= 10) {
+  "cold"
+} else if (temp <= 20) {
+  "cool"
+} else if (temp <= 30) {
+  "warm"
+} else {
+  "hot"
+}
+```
+
+How would you change the call to cut() if I’d used < instead of <=? What is the other chief advantage of cut() for this problem? (Hint: what happens if you have many values in temp?)
+
+### 5. What happens if you use switch() with numeric values?
+
+### 6. What does this switch() call do? What happens if x is “e”?
+
+```{r}
+switch(x, 
+  a = ,
+  b = "ab",
+  c = ,
+  d = "cd"
+)
+```
+Experiment, then carefully read the documentation.
+
