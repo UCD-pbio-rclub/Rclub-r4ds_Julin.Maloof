@@ -129,6 +129,7 @@ _Write a greeting function that says “good morning”, “good afternoon”, o
 
 ```{r, error=TRUE}
 library(lubridate)
+library(hms)
 library(stringr)
 greeting <-function(time=lubridate::now()) {
   if(class(time)=="character") {
