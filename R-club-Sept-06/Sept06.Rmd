@@ -1,0 +1,263 @@
+---
+title: "Sept-06"
+author: "Julin N Maloof"
+date: "9/5/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+## 21.2.1
+
+### 1
+
+_Write for loops to:_
+
+_1. Compute the mean of every column in mtcars._
+
+```{r}
+result <- vector("double",ncol(mtcars))
+names(result) <- colnames(mtcars)
+for(i in seq_along(mtcars)) {
+  result[i] <- mean(mtcars[[i]],na.rm=TRUE)
+}
+result
+```
+
+_2. Determine the type of each column in nycflights13::flights._
+
+```{r}
+flights <- nycflights13::flights
+result <- vector("character",ncol(flights))
+names(result) <- colnames(flights)
+for(i in seq_along(flights)) {
+  result[i] <- typeof(flights[[i]])
+}
+result
+```
+
+_3. Compute the number of unique values in each column of iris._
+
+```{r}
+result <- vector("integer",ncol(iris))
+names(result) <- colnames(iris)
+for(i in seq_along(iris)) {
+  result[i] <- length(unique(iris[[i]]))
+}
+result
+```
+
+_4. Generate 10 random normals for each of  `μ=−10 ,  0 ,  10 , and  100.`_
+
+```{r}
+means <- c(-10,0,10,100)
+result <- matrix(NA,ncol=length(means),nrow=10)
+for(i in seq_along(means)) {
+  result[,i] <- rnorm(10,mean=means[i])
+}
+result
+```
+
+### 2
+_Eliminate the for loop in each of the following examples by taking advantage of an existing function that works with vectors:_
+```{r}
+out <- ""
+for (x in letters) {
+  out <- stringr::str_c(out, x)
+}
+out
+```
+
+```{r}
+out <- stringr::str_c(letters,collapse="")
+out
+```
+
+```{r}
+x <- sample(100)
+sd <- 0
+for (i in seq_along(x)) {
+  sd <- sd + (x[i] - mean(x)) ^ 2
+}
+sd <- sqrt(sd / (length(x) - 1))
+sd
+```
+
+```{r}
+sd <- sd(x)
+sd
+```
+
+```{r}
+x <- runif(100)
+out <- vector("numeric", length(x))
+out[1] <- x[1]
+for (i in 2:length(x)) {
+  out[i] <- out[i - 1] + x[i]
+}
+out
+```
+
+```{r}
+cumsum(x)
+```
+
+### 3
+_Combine your function writing and for loop skills:_
+
+### 4
+_It’s common to see for loops that don’t preallocate the output and instead increase the length of a vector at each step:_
+
+```{r}
+x <- lapply(floor(runif(10000,min = 1,max = 1000)), rnorm) # a list of vectors of variable lengths
+
+system.time({
+  output <- vector("integer", 0)
+  for (i in seq_along(x)) {
+    output <- c(output, length(x[[i]])) #changed from lengths to length because that made more sense to me
+  }
+})
+
+head(output)
+
+```
+
+```{r}
+system.time({
+  output <- vector("integer", length(x))
+  for (i in seq_along(x)) {
+    output[i] <- length(x[[i]]) #changed from lengths to length because that made more sense to me
+  }
+})
+
+head(output)
+```
+
+
+## 21.3.5
+
+### 1
+_Imagine you have a directory full of CSV files that you want to read in. You have their paths in a vector, files <- dir("data/", pattern = "\\.csv$", full.names = TRUE), and now want to read each one with read_csv(). Write the for loop that will load them into a single data frame._
+
+Vague question, asssuming binding by rows...
+
+```{r, eval=FALSE}
+results <- vector("list",length=length(files))
+for(i in seq_along(files)) {
+  results[i] <- read_csv(file=files[[i]])
+}
+results <- bind_rows(results)
+```
+
+### 2
+_What happens if you use for (nm in names(x)) and x has no names? What if only some of the elements are named? What if the names are not unique?_
+
+```{r}
+x <- 1:10
+
+for(nm in names(x)) {
+  print(nm)
+  print(x[[nm]])
+}
+```
+blank!
+
+```{r, error=TRUE}
+names(x)[1:4] <- letters[1:4]
+for(nm in names(x)) {
+  print(nm)
+  print(x[[nm]])
+}
+```
+
+```{r, error=TRUE}
+names(x)[5:6] <- c("e","e")
+x
+for(nm in names(x)) {
+  print(x[[nm]])
+}
+```
+
+multiple names return first element with that name
+
+### 3
+_Write a function that prints the mean of each numeric column in a data frame, along with its name. _
+
+```{r, error=TRUE}
+show_mean <- function(df) {
+  for(i in seq_along(df)) {
+    if(is.numeric(df[[i]])) {
+      mean <- round(mean(df[[i]]),2)
+      names(df)[[i]] %>% 
+        str_c(":") %>% 
+        str_pad(max(str_length(names(df))+2),"right") %>%
+        str_c(mean) %>%
+        print()
+    }
+  }
+}
+
+show_mean(iris)
+```
+
+### 4
+_What does this code do? How does it work?_
+
+```{r}
+trans <- list( 
+  disp = function(x) x * 0.0163871,
+  am = function(x) {
+    factor(x, labels = c("auto", "manual"))
+  }
+)
+for (var in names(trans)) {
+  mtcars[[var]] <- trans[[var]](mtcars[[var]])
+}
+
+mtcars
+```
+
+we have a list of functions.  The for loop goes through that list.  Because the function names matches the colnames of mtcars we can apply it specifically to those columns to transform them.
+
+## 21.4.1
+
+### 1.
+_Read the documentation for apply(). In the 2d case, what two for loops does it generalise?_
+
+doing something for every row or for every column of a matrix
+
+### 2.
+```{r}
+col_summary <- function(df, fun) {
+  out <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    out[i] <- fun(df[[i]])
+  }
+  out
+}
+
+col_summary2 <- function(df, fun) {
+  out <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    if(is.numeric(df[[i]])) {
+      out[i] <- fun(df[[i]])
+    } else {
+      out[i] <- NA
+    }
+  }
+  out
+}
+
+col_summary2(iris,mean)
+
+col_summary(iris,mean)
+```
+
+
+
