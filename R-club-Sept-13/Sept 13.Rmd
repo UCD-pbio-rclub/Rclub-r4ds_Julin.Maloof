@@ -1,0 +1,97 @@
+---
+title: "Sept 13"
+author: "Julin N Maloof"
+date: "9/13/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+## 21.5.3 Exercises
+
+### 1. _Write code that uses one of the map functions to:_
+
+_Compute the mean of every column in mtcars._
+
+```{r}
+mtcars %>% map_dbl(mean)
+```
+
+_Determine the type of each column in nycflights13::flights._
+
+```{r}
+nycflights13::flights %>%
+  map_chr(typeof)
+```
+
+_Compute the number of unique values in each column of iris._
+
+```{r}
+iris %>% map_int(~length(unique(.)))
+```
+
+_Generate 10 random normals for each of $mu$ = -10, 0, 10, and 100._
+
+```{r}
+mus <- c(-10,0,10,100)
+mus %>% map(~rnorm(10,.)) 
+#or
+mus %>% map(rnorm,n=10)
+```
+
+### 2. _How can you create a single vector that for each column in a data frame indicates whether or not it’s a factor?_
+
+```{r}
+iris %>% map_lgl(is.factor)
+```
+
+
+### 3. _What happens when you use the map functions on vectors that aren’t lists? What does map(1:5, runif) do? Why?_
+
+This works fine; map is applied to each element of an atomic list
+
+```{r}
+map(1:5,runif)
+```
+
+### 4. _What does map(-2:2, rnorm, n = 5) do? Why? What does map_dbl(-2:2, rnorm, n = 5) do? Why?_
+
+```{r}
+map(-2:2, rnorm, n = 5) 
+```
+
+so map will fill in the chunked data into the first empty argument?  cool!
+
+
+```{r, error=TRUE}
+map_dbl(-2:2, rnorm, n = 5)
+```
+error because output of each chunk is a vector of length 5
+
+### 5 _Rewrite map(x, function(df) lm(mpg ~ wt, data = df)) to eliminate the anonymous function._
+
+```{r}
+mtcars %>%
+  split(.$cyl) %>%
+  map(~lm(mpg~wt, data = .))
+```
+
+## 21.9.3 Exercises
+
+### 1.
+_Implement your own version of every() using a for loop. Compare it with purrr::every(). What does purrr’s version do that your version doesn’t?_
+
+```{r}
+my_every <- function(df,) {
+  for(seq
+```
+
