@@ -90,8 +90,87 @@ mtcars %>%
 ### 1.
 _Implement your own version of every() using a for loop. Compare it with purrr::every(). What does purrr’s version do that your version doesn’t?_
 
-```{r}
-my_every <- function(df,) {
-  for(seq
+```{r, error=TRUE}
+my_every <- function(x,test) {
+  results <- vector("logical",length=length(x))
+  for(i in seq_along(x))  {
+    results[[i]] <- test(x[[i]])
+  }
+  if(sum(results) == length(x)) TRUE else FALSE
+}
+
+x <- 1:5
+
+my_every(x, is.integer)
+
+my_every(iris, is.factor)
+
+every(x, "> 5")
+
+my_every(x, "> 5")
+
 ```
 
+my_every can only take functions
+
+But...
+
+```{r}
+my_every <- function(x,test) {
+  results <- vector("logical",length=length(x))
+  for(i in seq_along(x))  {
+    if(is.function(test)) 
+      results[[i]] <- test(x[[i]])
+    else
+      eval(parse(text=paste(x,test)))
+  }
+  if(sum(results) == length(x)) TRUE else FALSE
+}
+
+x <- 1:5
+
+my_every(x, is.integer)
+
+my_every(iris, is.factor)
+
+every(x, "> 5")
+
+my_every(x, "> 5")
+```
+
+### 2. _Create an enhanced col_sum() that applies a summary function to every numeric column in a data frame._
+
+Didn't we already do this?
+
+### 3._A possible base R equivalent of col_sum() is:_
+
+
+```{r}
+col_sum3 <- function(df, f) {
+  is_num <- sapply(df, is.numeric)
+  df_num <- df[, is_num]
+
+  sapply(df_num, f)
+}
+```
+
+
+But it has a number of bugs as illustrated with the following inputs:
+
+```{r, error=TRUE}
+df <- tibble(
+  x = 1:3, 
+  y = 3:1,
+  z = c("a", "b", "c")
+)
+# OK
+col_sum3(df, mean)
+# Has problems: don't always return numeric vector
+col_sum3(df[1:2], mean)
+col_sum3(df[1], mean)
+col_sum3(df[0], mean)
+```
+
+What causes the bugs?
+
+This is because extracting from a data frame with [] changes types.
