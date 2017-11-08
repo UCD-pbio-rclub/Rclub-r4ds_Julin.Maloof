@@ -11,3 +11,354 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Chapter 23
+
+```{r}
+library(tidyverse)
+
+library(modelr)
+options(na.action = na.warn)
+```
+
+```{r}
+ggplot(sim1, aes(x, y)) + 
+  geom_point()
+```
+
+```{r}
+models <- tibble(
+  a1 = runif(250, -20, 40),
+  a2 = runif(250, -5, 5)
+)
+
+ggplot(sim1, aes(x, y)) + 
+  geom_abline(aes(intercept = a1, slope = a2), data = models, alpha = 1/4) +
+  geom_point() 
+```
+
+```{r}
+model1 <- function(a, data) {
+  a[1] + data$x * a[2]
+}
+model1(c(7, 1.5), sim1)
+#>  [1]  8.5  8.5  8.5 10.0 10.0 10.0 11.5 11.5 11.5 13.0 13.0 13.0 14.5 14.5
+#> [15] 14.5 16.0 16.0 16.0 17.5 17.5 17.5 19.0 19.0 19.0 20.5 20.5 20.5 22.0
+#> [29] 22.0 22.0
+```
+
+
+```{r}
+measure_distance <- function(mod, data) {
+  diff <- data$y - model1(mod, data)
+  sqrt(mean(diff ^ 2))
+}
+measure_distance(c(7, 1.5), sim1)
+#> [1] 2.67
+```
+
+```{r}
+sim1_dist <- function(a1, a2) {
+  measure_distance(c(a1, a2), sim1)
+}
+
+models <- models %>% 
+  mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist))
+models
+```
+
+```{r}
+ggplot(sim1, aes(x, y)) + 
+  geom_point(size = 2, colour = "grey30") + 
+  geom_abline(
+    aes(intercept = a1, slope = a2, colour = -dist), 
+    data = filter(models, rank(dist) <= 10)
+  )
+```
+
+```{r}
+ggplot(models, aes(a1, a2)) +
+  geom_point(data = filter(models, rank(dist) <= 10), size = 4, colour = "red") +
+  geom_point(aes(colour = -dist))
+```
+
+
+```{r}
+grid <- expand.grid(
+  a1 = seq(-5, 20, length = 25),
+  a2 = seq(1, 3, length = 25)
+  ) %>% 
+  mutate(dist = purrr::map2_dbl(a1, a2, sim1_dist))
+
+grid %>% 
+  ggplot(aes(a1, a2)) +
+  geom_point(data = filter(grid, rank(dist) <= 10), size = 4, colour = "red") +
+  geom_point(aes(colour = -dist)) 
+```
+
+```{r}
+ggplot(sim1, aes(x, y)) + 
+  geom_point(size = 2, colour = "grey30") + 
+  geom_abline(
+    aes(intercept = a1, slope = a2, colour = -dist), 
+    data = filter(grid, rank(dist) <= 10)
+  )
+```
+
+```{r}
+best <- optim(c(0, 0), measure_distance, data = sim1)
+best$par
+#> [1] 4.22 2.05
+
+ggplot(sim1, aes(x, y)) + 
+  geom_point(size = 2, colour = "grey30") + 
+  geom_abline(intercept = best$par[1], slope = best$par[2])
+```
+
+```{r}
+sim1_mod <- lm(y ~ x, data = sim1)
+coef(sim1_mod)
+```
+
+```{r}
+
+```
+
+### Exercise 23.2.1
+_One downside of the linear model is that it is sensitive to unusual values because the distance incorporates a squared term. Fit a linear model to the simulated data below, and visualise the results. Rerun a few times to generate different simulated datasets. What do you notice about the model?_
+
+```{r}
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+```
+
+```{r}
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+
+lm1 <- lm(y ~ x,data=sim1a)
+
+pl <- ggplot(sim1a,aes(x=x,y=y)) +
+  geom_point() +
+  geom_abline(intercept = coef(lm1)[1],slope=coef(lm1)[2],color="skyblue")
+pl
+```
+
+Alternate plotting method
+
+```{r}
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+pl <- ggplot(sim1a,aes(x=x,y=y)) +
+  geom_point() +
+  geom_smooth(method="lm",color="skyblue")
+pl
+```
+
+
+### 23.3.3 Exercises
+
+#### 1. Instead of using lm() to fit a straight line, you can use loess() to fit a smooth curve. Repeat the process of model fitting, grid generation, predictions, and visualisation on sim1 using loess() instead of lm(). How does the result compare to geom_smooth()?
+
+```{r}
+sim1_mod_loess <- loess(y~x, data=sim1)
+
+grid <- sim1 %>% 
+  data_grid(x) %>%
+  add_predictions(sim1_mod_loess)
+grid
+```
+
+
+```{r}
+ggplot(sim1, aes(x)) +
+  geom_point(aes(y = y)) +
+  geom_line(aes(y = pred), data = grid, colour = "red", size = 1) + 
+  geom_smooth(aes(y=y),lty=2,se = FALSE)
+```
+
+geom_smooth() gives the same line as the loess prediction.
+
+#### 2. add_predictions() is paired with gather_predictions() and spread_predictions(). How do these three functions differ? 
+
+gather and spread are used to add predictions from mutliple models, either in wide or long format
+
+```{r}
+sim1 %>% 
+  data_grid(x) %>%
+  spread_predictions(sim1_mod,sim1_mod_loess)
+```
+
+```{r}
+sim1 %>% 
+  data_grid(x) %>%
+  gather_predictions(sim1_mod,sim1_mod_loess)
+```
+
+
+#### 3. What does geom_ref_line() do? What package does it come from? Why is displaying a reference line in plots showing residuals useful and important?
+
+This adds a line to a ggplot.  Similar to geom_hline and geom_vline.
+
+Helps in looking for biases in the residuals.
+
+#### 4. Why might you want to look at a frequency polygon of absolute residuals? What are the pros and cons compared to looking at the raw residuals?
+
+In small data sets this could help you see trends?
+
+```{r}
+mod1 <- lm(y ~ x1 + x2, data = sim3)
+mod2 <- lm(y ~ x1 * x2, data = sim3)
+grid <- sim3 %>% 
+  data_grid(x1, x2) %>% 
+  gather_predictions(mod1, mod2)
+grid
+```
+
+```{r}
+ggplot(sim3, aes(x1, y, colour = x2)) + 
+  geom_point() + 
+  geom_line(data = grid, aes(y = pred)) + 
+  facet_wrap(~ model)
+```
+
+```{r}
+sim3 <- sim3 %>% 
+  gather_residuals(mod1, mod2)
+
+ggplot(sim3, aes(x1, resid, colour = x2)) + 
+  geom_point() + 
+  facet_grid(model ~ x2)
+```
+
+### 23.4.5 Exercises
+
+#### 1. What happens if you repeat the analysis of sim2 using a model without an intercept. What happens to the model equation? What happens to the predictions?
+
+```{r}
+mod2b <- lm(y ~ -1 + x, data = sim2)
+
+model.matrix(y~ -1 + x, data=sim2)
+```
+
+```{r}
+grid <- sim2 %>% 
+  data_grid(x) %>% 
+  add_predictions(mod2b)
+grid
+
+ggplot(sim2, aes(x)) + 
+  geom_point(aes(y = y)) +
+  geom_point(data = grid, aes(y = pred), colour = "red", size = 4)
+```
+
+PRetty much the same, just the parameterization has changed
+
+```{r}
+mod2 <- lm(y ~ x, data = sim2)
+summary(mod2)
+summary(mod2b)
+```
+
+
+the pvalues change because in the first one xb, xc, abd xd are testing from difference to the intercept (a), in the second parametereization the test is whether things are different from 0.
+
+
+#### 2. Use model_matrix() to explore the equations generated for the models I fit to sim3 and sim4. Why is * a good shorthand for interaction?
+
+```{r}
+model.matrix(y ~ x1 + x2, data = sim3)
+```
+
+```{r}
+model.matrix(y ~ x1 * x2, data = sim3)
+```
+
+interaction terms multiply the predictors....
+
+#### 3. Using the basic principles, convert the formulas in the following two models into functions. (Hint: start by converting the categorical variable into 0-1 variables.)
+
+`mod1 <- lm(y ~ x1 + x2, data = sim3)`
+`mod2 <- lm(y ~ x1 * x2, data = sim3)`
+
+```{r}
+head(sim3)
+
+model1 <- function(a,b_x1,b_a,b_b,b_c,b_d,data) {
+  data <- data %>% mutate(a=(x2=="a")*1,b=(x2=="b")*1,c=(x2=="c")*1,d=(x2=="d")*1)
+  a + b_x1*data$x1 + b_a * data$a + b_b * data$b + b_c * data$c + b_d * data$d
+}
+
+  
+```
+
+
+#### 4. For sim4, which of mod1 and mod2 is better? I think mod2 does a slightly better job at removing patterns, but it’s pretty subtle. Can you come up with a plot to support my claim?
+
+```{r}
+mod1 <- lm(y ~ x1 + x2, data = sim4)
+mod2 <- lm(y ~ x1 * x2, data = sim4)
+
+sim4 <- sim4 %>% gather_residuals(mod1, mod2)
+sim4
+```
+
+```{r}
+sim4 %>% ggplot(aes(x=abs(resid),fill=model,color=model)) + geom_freqpoly(binwidth=.5)
+```
+
+pretty subtle....
+
+
+# Chapter 24
+
+```{r}
+options(na.action = na.warn)
+
+library(nycflights13)
+library(lubridate)
+```
+
+
+```{r}
+diamonds2 <- diamonds %>% 
+  filter(carat <= 2.5) %>% 
+  mutate(lprice = log2(price), lcarat = log2(carat))
+
+ggplot(diamonds2, aes(lcarat, lprice)) + 
+  geom_hex(bins = 50)
+```
+
+
+```{r}
+mod_diamond <- lm(lprice ~ lcarat, data = diamonds2)
+
+```
+
+
+### 24.2.3 Exercises
+
+#### 1. In the plot of lcarat vs. lprice, there are some bright vertical strips. What do they represent?
+
+peaks in the distribution.  No one want a 0.9 carat diamong...
+
+```{r}
+diamonds2 %>% ggplot(aes(x=carat)) + geom_histogram()
+```
+
+
+#### 2. If log(price) = a_0 + a_1 * log(carat), what does that say about the relationship between price and carat?
+
+exponential
+
+#### 3. Extract the diamonds that have very high and very low residuals. Is there anything unusual about these diamonds? Are the particularly bad or good, or do you think these are pricing errors?
+
+#### 4. Does the final model, mod_diamonds2, do a good job of predicting diamond prices? Would you trust it to tell you how much to spend if you were buying a diamond?
+
+
+
