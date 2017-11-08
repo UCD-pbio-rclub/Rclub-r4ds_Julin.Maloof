@@ -1,0 +1,55 @@
+---
+title: "Sept 20"
+author: "Julin N Maloof"
+date: "9/20/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+library(modelr)
+options(na.action = na.warn)
+```
+
+
+### 1.
+_One downside of the linear model is that it is sensitive to unusual values because the distance incorporates a squared term. Fit a linear model to the simulated data below, and visualise the results. Rerun a few times to generate different simulated datasets. What do you notice about the model?_
+
+```{r}
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+```
+
+```{r}
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+
+lm1 <- lm(y ~ x,data=sim1a)
+
+pl <- ggplot(sim1a,aes(x=x,y=y)) +
+  geom_point() +
+  geom_abline(intercept = coef(lm1)[1],slope=coef(lm1)[2],color="skyblue")
+pl
+```
+
+Alternate plotting method
+
+```{r}
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+pl <- ggplot(sim1a,aes(x=x,y=y)) +
+  geom_point() +
+  geom_smooth(method="lm",color="skyblue")
+pl
+```
