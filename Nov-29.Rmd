@@ -2,7 +2,9 @@
 title: "Nov 29"
 author: "Julin N Maloof"
 date: "11/29/2017"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -29,7 +31,7 @@ This is a regression problem, with n = % change in exchange rate and p = everyth
 
 ```{r}
 library(tidyverse)
-data <- tibble(
+data <- tibble( # A tibble is like a data frame, but better.  See http://r4ds.had.co.nz/
   X1= c(0,2,0,0,-1,1),
   X2= c(3,0,1,1,0,1),
   X3 = c(0,0,3,2,1,1),
@@ -41,7 +43,7 @@ Euclidian distance is sqrt of the sum of the squared distances.
 
 ```{r}
 newpoint <- c(0,0,0)
-data %>%
+data %>% # a pipe.  See the pipes chapter at http://r4ds.had.co.nz/
   select(-Y) %>%
   apply(1,function(x) {(newpoint - x)^2 %>% sum() %>% sqrt()})
 ```
@@ -94,8 +96,8 @@ qualitative: name, origin, possibly year and possibly cylinder
 _(b) What is the range of each quantitative predictor? You can an- swer this using the range() function._
 
 ```{r}
-auto %>% select(-name) %>% map(range)
-auto %>% select(-name) %>% apply( 2, range)
+auto %>% select(-name) %>% map(range) # apply a function to every colum, or every item in a list.
+auto %>% select(-name) %>% apply( 2, range) # apply a function over rows(1) or columns(2) 
 ```
 
 
@@ -170,20 +172,21 @@ _How many rows are in this data set? How many columns? What do the rows and colu
 _(b) Make some pairwise scatterplots of the predictors (columns) in this data set. Describe your findings._
 
 ```{r}
-pairs(boston)
+pairs(boston) #uggh.  Too many varaibles to see
 ```
 
 _(c) Are any of the predictors associated with per capita crime rate? If so, explain the relationship._
 
+scatter plot for each predicitor vs. crime.
 ```{r, warning=FALSE}
-plots <- lapply(colnames(boston)[-1], function(p) {
+plots <- lapply(colnames(boston)[-1], function(p) { #creates a list of plots
   ggplot(boston, aes_string(x=p,y="crim")) +
     geom_point(shape=1) +
     geom_smooth(method="loess") + 
     ggtitle(p)
 })
 
-sapply(plots, print)
+sapply(plots, print) # now for each item in the list, print it 
 ```
 
 Because the predictors are mostly highly non-normal it is a bit difficult to see relationships here.
@@ -191,7 +194,7 @@ Because the predictors are mostly highly non-normal it is a bit difficult to see
 (d) Do any of the suburbs of Boston appear to have particularly high crime rates? Tax rates? Pupil-teacher ratios? Comment on the range of each predictor.
 
 ```{r}
-boston %>% gather(key="variable", value="value", everything()) %>%
+boston %>% gather(key="variable", value="value", everything()) %>% #gather take wide format and converts to long
   ggplot(aes(x=variable,y=value)) +
   geom_violin() +
   facet_wrap(~variable, scales="free",nrow=2)
